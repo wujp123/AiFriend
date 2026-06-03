@@ -9,6 +9,7 @@ import { config } from './config.js';
 import { imageService } from './image.js';
 import { languageDetector } from './lang-detect.js';
 import { paymentVerifier } from './payment-verify.js';
+import { telegramLogger } from './telegram-logger.js';
 
 // Telegram Web App
 const tg = window.Telegram?.WebApp || {
@@ -128,9 +129,18 @@ async function init() {
   currentUser = storage.getUser(userId);
   
   // 如果是新用户，保存用户信息
-  if (!currentUser.firstName) {
+  const isNewUser = !currentUser.firstName;
+  if (isNewUser) {
     storage.updateUser(userId, userInfo);
     currentUser = storage.getUser(userId);
+    
+    // 📝 记录新用户到 Telegram
+    try {
+      await telegramLogger.logNewUser(currentUser);
+      console.log('✅ New user logged to Telegram');
+    } catch (error) {
+      console.error('Failed to log new user:', error);
+    }
   }
   
   console.log('Current user data:', currentUser);
@@ -669,6 +679,7 @@ window.payWithStars = function(planId, stars, duration) {
 window.payWithTON = function(planId, tonAmount, duration) {
   console.log(`💎 Initiating TON payment: ${planId}, ${tonAmount} TON, ${duration} days`);
   
+  // TODO: 替换为你的真实 TON 钱包地址
   const tonAddress = '0x4a25ef931yce5c3eoca23b34b87520d6c2cd73a6';
   
   const messages = {
@@ -729,15 +740,15 @@ window.payWithTRON = function(planId, usdtAmount, duration) {
   
   // 主网钱包地址
   const tronAddress = 'TMiBnPCeFcv1A2UNKV636f5NAMvuJKQVhm';
-  const network = 'TRON Mainnet';
+  const network = 'TRON Mainnet'; // 主网
   
-  // USDT TRC20 合约地址 (主网)
-  const usdtContract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
+  // USDT TRC20 合约地址 (Nile 测试网)
+  const usdtContract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'; // 主网 USDT
   
   const messages = {
     zh: {
       title: `TRON 支付 (${network})`,
-      paymentInfo: `💰 支付信息\n\n金额：${usdtAmount} USDT\n网络：TRON 主网\n\n📋 收款地址：\n${tronAddress}\n\n📝 备注：AiFriend_${planId}_${currentUser.id}`,
+      paymentInfo: `💰 支付信息\n\n金额：${usdtAmount} USDT\n网络：Nile 测试网\n\n📋 收款地址：\n${tronAddress}\n\n📝 备注：AiFriend_${planId}_${currentUser.id}`,
       copyAndOpen: '复制地址并打开钱包',
       copyOnly: '仅复制地址',
       cancel: '取消',
@@ -856,6 +867,31 @@ async function verifyPaymentForUser(planId, amount, duration) {
         alert(successMsg);
       }
       
+      // 📝 记录支付到 Telegram
+      try {
+        const payment = {
+          userId: currentUser.id,
+          userName: currentUser.firstName || currentUser.username || 'Unknown',
+          planId: planId,
+          amount: amount,
+          duration: duration,
+          txId: result.txId,
+          timestamp: result.timestamp || Date.now(),
+          status: 'completed'
+        };
+        
+        // 保存到 localStorage
+        const payments = JSON.parse(localStorage.getItem('ifriendly_payments') || '[]');
+        payments.push(payment);
+        localStorage.setItem('ifriendly_payments', JSON.stringify(payments));
+        
+        // 发送到 Telegram
+        await telegramLogger.logPayment(payment);
+        console.log('✅ Payment logged to Telegram');
+      } catch (error) {
+        console.error('Failed to log payment:', error);
+      }
+      
       // 激活会员
       setTimeout(() => {
         activatePremium(duration);
@@ -888,70 +924,171 @@ async function verifyPaymentForUser(planId, amount, duration) {
     }
   }
 }
+
+// 打开 TRON 钱包进行支付
+async function openTronWallet(toAddress, amount, messages) {
+  console.log('🔗 Attempting to connect TRON wallet...');
   
-  // USDT TRC20 合约地址 (Nile 测试网)
-  const usdtContract = 'TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf'; // Nile 测试网实际 USDT
+  // 检测是否在 Telegram 环境
+  const isTelegramApp = window.Telegram?.WebApp?.initData;
+  const isWebView = /TelegramWebView/.test(navigator.userAgent);
   
-  const messages = {
-    zh: {
-      title: `TRON 支付 (${network})`,
-      desc: `【测试网络】请选择支付方式`,
-      openWallet: '打开钱包支付',
-      copyAddress: '复制地址',
-      done: '已完成支付',
-      cancel: '取消',
-      addressCopied: '地址已复制',
-      paymentInfo: `金额: ${usdtAmount} USDT\n收款地址: ${tronAddress}\n备注: AiFriend_${planId}_${currentUser.id}`,
-      connectingWallet: '正在连接钱包...',
-      walletNotFound: '未检测到钱包，请先安装 TronLink 或 imToken',
-      paymentSuccess: '支付请求已发送到钱包，请在钱包中确认',
-      verifying: '正在验证支付...'
-    },
-    en: {
-      title: `TRON Payment (${network})`,
-      desc: `【Testnet】Choose payment method`,
-      openWallet: 'Pay with Wallet',
-      copyAddress: 'Copy Address',
-      done: 'Completed',
-      cancel: 'Cancel',
-      addressCopied: 'Address copied',
-      paymentInfo: `Amount: ${usdtAmount} USDT\nRecipient: ${tronAddress}\nMemo: AiFriend_${planId}_${currentUser.id}`,
-      connectingWallet: 'Connecting wallet...',
-      walletNotFound: 'Wallet not detected. Please install TronLink or imToken',
-      paymentSuccess: 'Payment request sent to wallet. Please confirm in your wallet.',
-      verifying: 'Verifying payment...'
-    }
-  };
-  
-  const msg = currentLang === 'zh' ? messages.zh : messages.en;
-  
-  try {
-    tg.showPopup({
-      title: msg.title,
-      message: msg.paymentInfo,
-      buttons: [
-        { id: 'wallet', type: 'default', text: msg.openWallet },
-        { id: 'copy', type: 'default', text: msg.copyAddress },
-        { id: 'cancel', type: 'cancel', text: msg.cancel }
-      ]
-    }, async (buttonId) => {
-      if (buttonId === 'wallet') {
-        // 尝试调用钱包
-        await openTronWallet(tronAddress, usdtAmount, msg);
-      } else if (buttonId === 'copy') {
-        copyToClipboard(tronAddress);
-        tg.showAlert(msg.addressCopied);
-      }
-    });
-  } catch (e) {
-    // 浏览器环境回退
-    if (confirm(msg.paymentInfo + '\n\n' + (currentLang === 'zh' ? '点击确定打开钱包' : 'Click OK to open wallet'))) {
-      openTronWallet(tronAddress, usdtAmount, msg);
+  // 方案1: 检测 TronLink (浏览器扩展)
+  if (window.tronWeb && window.tronWeb.ready) {
+    try {
+      console.log('✅ TronLink detected');
+      await payWithTronLink(toAddress, amount, messages);
+      return;
+    } catch (error) {
+      console.error('TronLink payment failed:', error);
     }
   }
-};
+  
+  // 方案2: 检测 TronLink 移动端
+  if (window.tronLink) {
+    try {
+      console.log('✅ TronLink Mobile detected');
+      await window.tronLink.request({ method: 'tron_requestAccounts' });
+      await payWithTronLink(toAddress, amount, messages);
+      return;
+    } catch (error) {
+      console.error('TronLink Mobile payment failed:', error);
+    }
+  }
+  
+  // 检测是否在移动设备
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    // 移动端：使用通用钱包链接
+    console.log('📱 Mobile device detected, opening wallet...');
+    
+    // 构建 TRON 支付参数
+    const paymentParams = {
+      to: toAddress,
+      amount: amount,
+      token: 'USDT',
+      network: 'nile' // 测试网
+    };
+    
+    // 方案1: TronLink URL Scheme (推荐)
+    const tronLinkUrl = `tronlink://wallet/transfer?to=${toAddress}&amount=${amount}&token=USDT`;
+    
+    // 方案2: 通用 Web3 钱包 URL
+    const web3Url = `https://link.trustwallet.com/send?asset=c195&address=${toAddress}&amount=${amount}`;
+    
+    // 显示选择弹窗
+    if (isTelegramApp || isWebView) {
+      // 在 Telegram 中，使用不同的方式
+      const walletMsg = currentLang === 'zh'
+        ? `请选择钱包应用:\n\n💎 TronLink\n📱 imToken\n🔐 Trust Wallet\n\n或者复制地址手动转账`
+        : `Choose wallet:\n\n💎 TronLink\n📱 imToken\n🔐 Trust Wallet\n\nOr copy address for manual transfer`;
+      
+      try {
+        tg.showPopup({
+          title: currentLang === 'zh' ? '选择钱包' : 'Choose Wallet',
+          message: walletMsg,
+          buttons: [
+            { id: 'tronlink', type: 'default', text: 'TronLink' },
+            { id: 'imtoken', type: 'default', text: 'imToken' },
+            { id: 'manual', type: 'default', text: currentLang === 'zh' ? '手动转账' : 'Manual' }
+          ]
+        }, (buttonId) => {
+          if (buttonId === 'tronlink') {
+            openWalletApp('tronlink', toAddress, amount);
+          } else if (buttonId === 'imtoken') {
+            openWalletApp('imtoken', toAddress, amount);
+          } else if (buttonId === 'manual') {
+            showManualPaymentInstructions(toAddress, amount);
+          }
+        });
+      } catch (e) {
+        // 回退方案
+        showManualPaymentInstructions(toAddress, amount);
+      }
+    } else {
+      // 普通浏览器，尝试打开钱包
+      const opened = await tryOpenApp(tronLinkUrl, 1000);
+      
+      if (!opened) {
+        // 显示下载提示
+        showWalletDownloadLinks();
+      }
+    }
+  } else {
+    // 桌面端：引导用户安装浏览器扩展
+    const installMsg = currentLang === 'zh' 
+      ? '请安装 TronLink 浏览器扩展\n\n或在手机上使用钱包 App'
+      : 'Please install TronLink browser extension\n\nOr use wallet app on mobile';
+    
+    if (confirm(installMsg + '\n\n' + toAddress)) {
+      window.open('https://www.tronlink.org/', '_blank');
+    }
+  }
+}
 
-// 使用 TronLink 支付（仅支持浏览器扩展）
+// 打开指定的钱包应用
+function openWalletApp(walletType, toAddress, amount) {
+  let appUrl = '';
+  
+  switch(walletType) {
+    case 'tronlink':
+      // TronLink 通用链接
+      appUrl = `tronlink://wallet/transfer?to=${toAddress}&amount=${amount}&token=USDT`;
+      break;
+    case 'imtoken':
+      // imToken 通用链接
+      appUrl = `imtokenv2://navigate/DappView?url=${encodeURIComponent('https://tronscan.org')}`;
+      break;
+    case 'trust':
+      // Trust Wallet
+      appUrl = `https://link.trustwallet.com/send?asset=c195&address=${toAddress}&amount=${amount}`;
+      break;
+  }
+  
+  if (appUrl) {
+    console.log('Opening wallet:', walletType, appUrl);
+    
+    // 尝试打开应用
+    window.location.href = appUrl;
+    
+    // 2秒后显示备用方案
+    setTimeout(() => {
+      showManualPaymentInstructions(toAddress, amount);
+    }, 2000);
+  }
+}
+
+// 显示手动支付说明
+function showManualPaymentInstructions(toAddress, amount) {
+  const msg = currentLang === 'zh' 
+    ? `请手动在钱包中转账：\n\n收款地址：\n${toAddress}\n\n金额：${amount} USDT\n网络：TRON (TRC20)\n测试网：Nile Testnet`
+    : `Please transfer manually:\n\nRecipient:\n${toAddress}\n\nAmount: ${amount} USDT\nNetwork: TRON (TRC20)\nTestnet: Nile`;
+  
+  try {
+    tg.showAlert(msg);
+  } catch (e) {
+    alert(msg);
+  }
+  
+  // 同时复制地址
+  copyToClipboard(toAddress);
+}
+
+// 显示钱包下载链接
+function showWalletDownloadLinks() {
+  const msg = currentLang === 'zh'
+    ? '未检测到钱包应用\n\n推荐钱包：\n💎 TronLink: tronlink.org\n📱 imToken: token.im\n🔐 Trust Wallet: trustwallet.com'
+    : 'Wallet not detected\n\nRecommended wallets:\n💎 TronLink: tronlink.org\n📱 imToken: token.im\n🔐 Trust Wallet: trustwallet.com';
+  
+  try {
+    tg.showAlert(msg);
+  } catch (e) {
+    alert(msg);
+  }
+}
+
+// 使用 TronLink 支付
 async function payWithTronLink(toAddress, amount, messages) {
   try {
     if (!window.tronWeb) {
@@ -1041,6 +1178,20 @@ function activatePremium(days) {
   
   // 重新获取用户数据（包含更新后的会员状态）
   currentUser = storage.getUser(currentUser.id);
+  
+  // 📝 记录会员激活到 Telegram
+  try {
+    const expireDate = new Date(currentUser.premiumUntil);
+    telegramLogger.logMembershipActivation(
+      currentUser.id,
+      currentUser.firstName || currentUser.username || 'Unknown',
+      days,
+      expireDate
+    );
+    console.log('✅ Membership activation logged to Telegram');
+  } catch (error) {
+    console.error('Failed to log membership activation:', error);
+  }
   
   const successMsg = currentLang === 'zh' 
     ? `🎉 恭喜！会员已激活，有效期 ${days} 天\n\n您现在拥有无限对话次数！` 

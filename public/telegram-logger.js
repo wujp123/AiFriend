@@ -4,20 +4,18 @@
 class TelegramLogger {
   constructor() {
     // 你的 Telegram Bot Token（从 @BotFather 获取）
-    this.botToken = 'YOUR_BOT_TOKEN_HERE';
+    this.botToken = '8746713240:AAGyg-AMCdVUrj9uvrvnspK2EYpZvo7YYs0';
     
     // 你的 Telegram Chat ID（管理员的 Telegram ID 或频道 ID）
-    this.adminChatId = 'YOUR_ADMIN_CHAT_ID_HERE';
+    this.adminChatId = '6606927788';
     
     // API URL
     this.apiUrl = `https://api.telegram.org/bot${this.botToken}`;
     
     // 是否启用日志
-    this.enabled = this.botToken !== 'YOUR_BOT_TOKEN_HERE';
+    this.enabled = true;
     
-    if (!this.enabled) {
-      console.warn('⚠️ Telegram Logger not configured');
-    }
+    console.log('✅ Telegram Logger configured and enabled');
   }
   
   // 发送消息到 Telegram

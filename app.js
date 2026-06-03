@@ -9,6 +9,7 @@ import { config } from './config.js';
 import { imageService } from './image.js';
 import { languageDetector } from './lang-detect.js';
 import { paymentVerifier } from './payment-verify.js';
+import { telegramLogger } from './telegram-logger.js';
 
 // Telegram Web App
 const tg = window.Telegram?.WebApp || {
@@ -128,9 +129,18 @@ async function init() {
   currentUser = storage.getUser(userId);
   
   // 如果是新用户，保存用户信息
-  if (!currentUser.firstName) {
+  const isNewUser = !currentUser.firstName;
+  if (isNewUser) {
     storage.updateUser(userId, userInfo);
     currentUser = storage.getUser(userId);
+    
+    // 📝 记录新用户到 Telegram
+    try {
+      await telegramLogger.logNewUser(currentUser);
+      console.log('✅ New user logged to Telegram');
+    } catch (error) {
+      console.error('Failed to log new user:', error);
+    }
   }
   
   console.log('Current user data:', currentUser);
@@ -857,6 +867,31 @@ async function verifyPaymentForUser(planId, amount, duration) {
         alert(successMsg);
       }
       
+      // 📝 记录支付到 Telegram
+      try {
+        const payment = {
+          userId: currentUser.id,
+          userName: currentUser.firstName || currentUser.username || 'Unknown',
+          planId: planId,
+          amount: amount,
+          duration: duration,
+          txId: result.txId,
+          timestamp: result.timestamp || Date.now(),
+          status: 'completed'
+        };
+        
+        // 保存到 localStorage
+        const payments = JSON.parse(localStorage.getItem('ifriendly_payments') || '[]');
+        payments.push(payment);
+        localStorage.setItem('ifriendly_payments', JSON.stringify(payments));
+        
+        // 发送到 Telegram
+        await telegramLogger.logPayment(payment);
+        console.log('✅ Payment logged to Telegram');
+      } catch (error) {
+        console.error('Failed to log payment:', error);
+      }
+      
       // 激活会员
       setTimeout(() => {
         activatePremium(duration);
@@ -1143,6 +1178,20 @@ function activatePremium(days) {
   
   // 重新获取用户数据（包含更新后的会员状态）
   currentUser = storage.getUser(currentUser.id);
+  
+  // 📝 记录会员激活到 Telegram
+  try {
+    const expireDate = new Date(currentUser.premiumUntil);
+    telegramLogger.logMembershipActivation(
+      currentUser.id,
+      currentUser.firstName || currentUser.username || 'Unknown',
+      days,
+      expireDate
+    );
+    console.log('✅ Membership activation logged to Telegram');
+  } catch (error) {
+    console.error('Failed to log membership activation:', error);
+  }
   
   const successMsg = currentLang === 'zh' 
     ? `🎉 恭喜！会员已激活，有效期 ${days} 天\n\n您现在拥有无限对话次数！` 
