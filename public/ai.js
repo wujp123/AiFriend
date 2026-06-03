@@ -49,12 +49,8 @@ export class AIService {
     
     const role = getRole(roleId);
     
-    // 检测用户消息的语言
-    const detectedLanguage = this.detectMessageLanguage(message);
-    console.log('🔍 Detected Message Language:', detectedLanguage);
-    
-    // 使用检测到的语言，而不是系统设置的语言
-    const responseLanguage = detectedLanguage;
+    // 使用系统设置的语言作为目标语言
+    const responseLanguage = userLanguage;
     
     // 语言映射
     const languageNames = {
@@ -71,6 +67,8 @@ export class AIService {
     };
     
     const currentLanguage = languageNames[responseLanguage] || languageNames['en'];
+    
+    console.log('🎯 Target response language:', currentLanguage);
     
     // 检查是否需要生成图片
     const shouldGenerateImage = imageService.shouldGenerateImage(message);
@@ -237,17 +235,12 @@ ${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturall
   
   // 检测消息语言
   detectMessageLanguage(message) {
-    // 中文检测（包括简繁体）
-    if (/[\u4e00-\u9fa5]/.test(message)) {
-      return 'zh';
-    }
-    
-    // 日文检测（平假名、片假名）
+    // 日文检测（平假名、片假名）- 必须在中文检测之前！
     if (/[\u3040-\u309f\u30a0-\u30ff]/.test(message)) {
       return 'ja';
     }
     
-    // 韩文检测
+    // 韩文检测 - 也要在中文之前
     if (/[\uac00-\ud7af\u1100-\u11ff\u3130-\u318f]/.test(message)) {
       return 'ko';
     }
@@ -260,6 +253,11 @@ ${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturall
     // 俄文（西里尔字母）
     if (/[\u0400-\u04ff]/.test(message)) {
       return 'ru';
+    }
+    
+    // 中文检测（包括简繁体）- 放在后面，因为日韩文可能包含汉字
+    if (/[\u4e00-\u9fa5]/.test(message)) {
+      return 'zh';
     }
     
     // 常见英语词汇模式检测
