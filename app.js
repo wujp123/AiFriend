@@ -573,22 +573,6 @@ function renderMembership() {
       <div class="payment-methods">
         <h4>${currentLang === 'zh' ? '支付方式' : 'Payment Method'}</h4>
         
-        <button class="payment-btn stars-btn" onclick="window.payWithStars('${plan.id}', ${plan.stars}, ${plan.duration})">
-          <span class="payment-icon">⭐</span>
-          <div class="payment-info">
-            <div class="payment-name">Telegram Stars</div>
-            <div class="payment-amount">${plan.stars} Stars</div>
-          </div>
-        </button>
-        
-        <button class="payment-btn ton-btn" onclick="window.payWithTON('${plan.id}', '${plan.ton}', ${plan.duration})">
-          <span class="payment-icon">💎</span>
-          <div class="payment-info">
-            <div class="payment-name">TON</div>
-            <div class="payment-amount">~${plan.ton} TON</div>
-          </div>
-        </button>
-        
         <button class="payment-btn tron-btn" onclick="window.payWithTRON('${plan.id}', '${plan.usdt}', ${plan.duration})">
           <span class="payment-icon">🔺</span>
           <div class="payment-info">
@@ -682,7 +666,8 @@ window.payWithStars = function(planId, stars, duration) {
 window.payWithTON = function(planId, tonAmount, duration) {
   console.log(`💎 Initiating TON payment: ${planId}, ${tonAmount} TON, ${duration} days`);
   
-  const tonAddress = 'YOUR_TON_WALLET_ADDRESS';
+  // TODO: 替换为你的真实 TON 钱包地址
+  const tonAddress = '0x4a25ef931yce5c3eoca23b34b87520d6c2cd73a6';
   
   const messages = {
     zh: {
@@ -740,7 +725,7 @@ window.payWithTON = function(planId, tonAmount, duration) {
 window.payWithTRON = function(planId, usdtAmount, duration) {
   console.log(`🔺 Initiating TRON payment: ${planId}, ${usdtAmount} USDT, ${duration} days`);
   
-  const tronAddress = 'YOUR_TRON_WALLET_ADDRESS';
+  const tronAddress = 'TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m';
   
   const messages = {
     zh: {
