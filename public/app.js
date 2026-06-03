@@ -128,13 +128,19 @@ async function init() {
   // 获取或创建用户数据
   currentUser = storage.getUser(userId);
   
-  // 如果是新用户，保存用户信息
-  const isNewUser = !currentUser.firstName;
-  if (isNewUser) {
+  // 判断是否为新用户（检查是否刚刚创建，5秒内算新用户）
+  const isNewUser = currentUser.createdAt && 
+    (Date.now() - new Date(currentUser.createdAt).getTime() < 5000);
+  
+  // 更新用户信息（无论新老用户，都更新 Telegram 的最新信息）
+  if (telegramUser) {
     storage.updateUser(userId, userInfo);
     currentUser = storage.getUser(userId);
-    
-    // 📝 记录新用户到 Telegram
+  }
+  
+  // 如果是新用户，记录到 Telegram
+  if (isNewUser) {
+    console.log('🆕 New user detected, logging to Telegram...');
     try {
       await telegramLogger.logNewUser(currentUser);
       console.log('✅ New user logged to Telegram');
