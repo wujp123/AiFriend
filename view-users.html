@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户数据查看器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 36px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .section {
+      margin: 30px 0;
+    }
+    
+    .section-title {
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #667eea;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    tr:hover {
+      background: #f8f9fa;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .badge.premium {
+      background: #ffd700;
+      color: #333;
+    }
+    
+    .badge.free {
+      background: #e0e0e0;
+      color: #666;
+    }
+    
+    .badge.active {
+      background: #10b981;
+      color: white;
+    }
+    
+    .badge.expired {
+      background: #ef4444;
+      color: white;
+    }
+    
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+      transition: all 0.3s;
+    }
+    
+    button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+    
+    .refresh-btn {
+      float: right;
+    }
+    
+    .user-detail {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .filter-bar {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    select, input {
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 用户数据查看器</h1>
+    <p style="color: #666; margin-bottom: 20px;">实时查看 localStorage 中的用户数据</p>
+    
+    <button class="refresh-btn" onclick="loadData()">🔄 刷新数据</button>
+    
+    <!-- 统计卡片 -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">总用户数</div>
+        <div class="stat-value" id="totalUsers">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">会员用户</div>
+        <div class="stat-value" id="premiumUsers">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">今日新增</div>
+        <div class="stat-value" id="todayUsers">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">对话总数</div>
+        <div class="stat-value" id="totalConversations">0</div>
+      </div>
+    </div>
+    
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <select id="filterType" onchange="applyFilter()">
+        <option value="all">全部用户</option>
+        <option value="premium">会员用户</option>
+        <option value="free">免费用户</option>
+        <option value="active">活跃用户</option>
+      </select>
+      
+      <input type="text" id="searchUser" placeholder="搜索用户ID或名称..." onkeyup="applyFilter()">
+      
+      <button onclick="exportCSV()">📥 导出CSV</button>
+      <button onclick="exportJSON()">📥 导出JSON</button>
+    </div>
+    
+    <!-- 用户列表 -->
+    <div class="section">
+      <h2 class="section-title">👥 用户列表</h2>
+      <table id="userTable">
+        <thead>
+          <tr>
+            <th>用户ID</th>
+            <th>名称</th>
+            <th>状态</th>
+            <th>会员到期</th>
+            <th>剩余次数</th>
+            <th>注册时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- 详细信息 -->
+    <div class="section" id="detailSection" style="display: none;">
+      <h2 class="section-title">📋 详细信息</h2>
+      <button onclick="closeDetail()">关闭</button>
+      <div class="user-detail" id="userDetail"></div>
+    </div>
+    
+    <!-- 对话统计 -->
+    <div class="section">
+      <h2 class="section-title">💬 对话统计</h2>
+      <div id="conversationStats"></div>
+    </div>
+  </div>
+
+  <script>
+    let allUsers = {};
+    let filteredUsers = {};
+    
+    // 加载数据
+    function loadData() {
+      console.log('🔄 Loading data...');
+      
+      // 读取用户数据
+      try {
+        const usersData = localStorage.getItem('ifriendly_users');
+        allUsers = usersData ? JSON.parse(usersData) : {};
+        filteredUsers = {...allUsers};
+      } catch (e) {
+        console.error('Error loading users:', e);
+        allUsers = {};
+        filteredUsers = {};
+      }
+      
+      updateStats();
+      renderUserTable();
+      renderConversationStats();
+      
+      console.log('✅ Data loaded:', Object.keys(allUsers).length, 'users');
+    }
+    
+    // 更新统计
+    function updateStats() {
+      const userList = Object.values(allUsers);
+      const totalUsers = userList.length;
+      
+      // 会员用户
+      const premiumUsers = userList.filter(u => {
+        if (!u.isPremium || !u.premiumUntil) return false;
+        return new Date(u.premiumUntil) > new Date();
+      }).length;
+      
+      // 今日新增
+      const today = new Date().toDateString();
+      const todayUsers = userList.filter(u => {
+        if (!u.createdAt) return false;
+        return new Date(u.createdAt).toDateString() === today;
+      }).length;
+      
+      // 对话总数
+      const conversations = JSON.parse(localStorage.getItem('ifriendly_conversations') || '{}');
+      let totalConversations = 0;
+      Object.values(conversations).forEach(userConvs => {
+        totalConversations += Object.keys(userConvs).length;
+      });
+      
+      document.getElementById('totalUsers').textContent = totalUsers;
+      document.getElementById('premiumUsers').textContent = premiumUsers;
+      document.getElementById('todayUsers').textContent = todayUsers;
+      document.getElementById('totalConversations').textContent = totalConversations;
+    }
+    
+    // 渲染用户表格
+    function renderUserTable() {
+      const tbody = document.getElementById('userTableBody');
+      tbody.innerHTML = '';
+      
+      const userList = Object.entries(filteredUsers);
+      
+      if (userList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #999;">暂无数据</td></tr>';
+        return;
+      }
+      
+      userList.forEach(([userId, user]) => {
+        const row = document.createElement('tr');
+        
+        // 会员状态
+        const isPremium = user.isPremium && user.premiumUntil && new Date(user.premiumUntil) > new Date();
+        const premiumBadge = isPremium 
+          ? '<span class="badge premium">会员</span>' 
+          : '<span class="badge free">免费</span>';
+        
+        // 会员到期时间
+        let expiryText = '-';
+        let expiryBadge = '';
+        if (isPremium) {
+          const expiry = new Date(user.premiumUntil);
+          const days = Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24));
+          expiryText = expiry.toLocaleDateString('zh-CN');
+          expiryBadge = days > 7 
+            ? '<span class="badge active">剩余' + days + '天</span>'
+            : '<span class="badge expired">剩余' + days + '天</span>';
+        }
+        
+        // 用户名称
+        const userName = user.firstName || user.username || '匿名用户';
+        const userIdShort = userId.substring(0, 12) + (userId.length > 12 ? '...' : '');
+        
+        // 剩余次数
+        const remaining = user.freeTries !== undefined ? user.freeTries : '-';
+        
+        // 注册时间
+        const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleDateString('zh-CN') : '-';
+        
+        row.innerHTML = `
+          <td title="${userId}">${userIdShort}</td>
+          <td>${userName}</td>
+          <td>${premiumBadge}</td>
+          <td>${expiryText} ${expiryBadge}</td>
+          <td>${isPremium ? '∞' : remaining}</td>
+          <td>${createdAt}</td>
+          <td>
+            <button onclick="viewDetail('${userId}')">查看</button>
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+    }
+    
+    // 查看详情
+    function viewDetail(userId) {
+      const user = allUsers[userId];
+      if (!user) return;
+      
+      // 获取对话记录
+      const conversations = JSON.parse(localStorage.getItem('ifriendly_conversations') || '{}');
+      const userConversations = conversations[userId] || {};
+      
+      const detail = {
+        '用户ID': userId,
+        '名称': user.firstName || '未设置',
+        '用户名': user.username || '未设置',
+        '语言': user.language || '未设置',
+        '当前角色': user.currentRole || '未设置',
+        '免费次数': user.freeTries || 0,
+        '上次重置': user.lastReset || '未设置',
+        '会员状态': user.isPremium ? '是' : '否',
+        '会员到期': user.premiumUntil ? new Date(user.premiumUntil).toLocaleString('zh-CN') : '-',
+        '注册时间': user.createdAt ? new Date(user.createdAt).toLocaleString('zh-CN') : '-',
+        '对话数量': Object.keys(userConversations).length,
+        '是否匿名': user.isAnonymous ? '是' : '否'
+      };
+      
+      document.getElementById('userDetail').textContent = JSON.stringify(detail, null, 2);
+      document.getElementById('detailSection').style.display = 'block';
+      document.getElementById('detailSection').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // 关闭详情
+    function closeDetail() {
+      document.getElementById('detailSection').style.display = 'none';
+    }
+    
+    // 应用筛选
+    function applyFilter() {
+      const filterType = document.getElementById('filterType').value;
+      const searchText = document.getElementById('searchUser').value.toLowerCase();
+      
+      filteredUsers = {};
+      
+      Object.entries(allUsers).forEach(([userId, user]) => {
+        let match = true;
+        
+        // 类型筛选
+        if (filterType === 'premium') {
+          match = user.isPremium && user.premiumUntil && new Date(user.premiumUntil) > new Date();
+        } else if (filterType === 'free') {
+          match = !user.isPremium || !user.premiumUntil || new Date(user.premiumUntil) <= new Date();
+        } else if (filterType === 'active') {
+          match = user.lastReset === new Date().toDateString();
+        }
+        
+        // 搜索筛选
+        if (match && searchText) {
+          const userName = (user.firstName || '').toLowerCase();
+          const userUsername = (user.username || '').toLowerCase();
+          match = userId.toLowerCase().includes(searchText) || 
+                  userName.includes(searchText) || 
+                  userUsername.includes(searchText);
+        }
+        
+        if (match) {
+          filteredUsers[userId] = user;
+        }
+      });
+      
+      renderUserTable();
+    }
+    
+    // 导出CSV
+    function exportCSV() {
+      let csv = '用户ID,名称,用户名,会员状态,会员到期,剩余次数,注册时间\n';
+      
+      Object.entries(filteredUsers).forEach(([userId, user]) => {
+        const isPremium = user.isPremium && user.premiumUntil && new Date(user.premiumUntil) > new Date();
+        const expiry = isPremium ? new Date(user.premiumUntil).toLocaleDateString('zh-CN') : '-';
+        const remaining = isPremium ? '∞' : (user.freeTries || 0);
+        const created = user.createdAt ? new Date(user.createdAt).toLocaleDateString('zh-CN') : '-';
+        
+        csv += `"${userId}","${user.firstName || ''}","${user.username || ''}","${isPremium ? '会员' : '免费'}","${expiry}","${remaining}","${created}"\n`;
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    }
+    
+    // 导出JSON
+    function exportJSON() {
+      const json = JSON.stringify(filteredUsers, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `users_${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+    }
+    
+    // 渲染对话统计
+    function renderConversationStats() {
+      const conversations = JSON.parse(localStorage.getItem('ifriendly_conversations') || '{}');
+      const stats = document.getElementById('conversationStats');
+      
+      let html = '<table><thead><tr><th>用户</th><th>对话数</th><th>消息总数</th></tr></thead><tbody>';
+      
+      Object.entries(conversations).forEach(([userId, userConvs]) => {
+        const user = allUsers[userId];
+        const userName = user ? (user.firstName || user.username || '未知') : '已删除用户';
+        const convCount = Object.keys(userConvs).length;
+        
+        let totalMessages = 0;
+        Object.values(userConvs).forEach(conv => {
+          totalMessages += conv.messages ? conv.messages.length : 0;
+        });
+        
+        html += `<tr><td>${userName}</td><td>${convCount}</td><td>${totalMessages}</td></tr>`;
+      });
+      
+      html += '</tbody></table>';
+      stats.innerHTML = html;
+    }
+    
+    // 页面加载时初始化
+    window.addEventListener('load', loadData);
+  </script>
+</body>
+</html>
