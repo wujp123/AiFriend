@@ -81,7 +81,8 @@ const elements = {
   backFromSettings: document.getElementById('backFromSettings'),
   languageSelect: document.getElementById('languageSelect'),
   apiKeyInput: document.getElementById('apiKeyInput'),
-  clearHistoryBtn: document.getElementById('clearHistoryBtn')
+  clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+  resetAccountBtn: document.getElementById('resetAccountBtn')
 };
 
 // 初始化
@@ -268,6 +269,7 @@ function setupEventListeners() {
   elements.languageSelect.addEventListener('change', changeLanguage);
   elements.apiKeyInput.addEventListener('blur', saveApiKey);
   elements.clearHistoryBtn.addEventListener('click', clearHistory);
+  elements.resetAccountBtn.addEventListener('click', resetAccount);
 }
 
 // 切换视图
@@ -1351,6 +1353,43 @@ function clearHistory() {
       elements.chatMessages.innerHTML = '';
       addWelcomeMessage();
       alert(clearedMessage);
+    }
+  }
+}
+
+// 重置账号（清除所有数据，重新注册）
+function resetAccount() {
+  const confirmMessage = currentLang === 'zh'
+    ? '⚠️ 确定要重置账号吗？\n\n这将清除所有数据：\n• 用户信息\n• 对话记录\n• 会员状态\n\n重置后将作为新用户重新注册'
+    : '⚠️ Reset account?\n\nThis will clear all data:\n• User info\n• Conversations\n• Membership\n\nYou will register as new user';
+  
+  const successMessage = currentLang === 'zh'
+    ? '✅ 账号已重置！\n\n页面将刷新...'
+    : '✅ Account reset!\n\nPage will reload...';
+  
+  try {
+    tg.showConfirm(confirmMessage, (confirmed) => {
+      if (confirmed) {
+        // 清除所有 localStorage 数据
+        localStorage.clear();
+        
+        // 显示成功消息
+        tg.showAlert(successMessage);
+        
+        // 1秒后刷新页面
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      }
+    });
+  } catch (e) {
+    // Fallback for non-Telegram environment
+    if (confirm(confirmMessage)) {
+      localStorage.clear();
+      alert(successMessage);
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
     }
   }
 }
