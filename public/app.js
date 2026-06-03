@@ -1,5 +1,5 @@
 // AiFriend - 主应用逻辑
-// Version: 2.0 - Wallet Integration
+// Version: 2.1 - Payment Verification
 // Last Update: 2024-12-10
 import { t, detectLanguage, getSupportedLanguages } from './i18n.js';
 import { roles, getRolesByCategory, getRole, isRoleFree } from './roles.js';
@@ -8,6 +8,7 @@ import { aiService } from './ai.js';
 import { config } from './config.js';
 import { imageService } from './image.js';
 import { languageDetector } from './lang-detect.js';
+import { paymentVerifier } from './payment-verify.js';
 
 // Telegram Web App
 const tg = window.Telegram?.WebApp || {
@@ -766,7 +767,7 @@ window.payWithTRON = function(planId, usdtAmount, duration) {
       message: msg.paymentInfo,
       buttons: [
         { id: 'copy', type: 'default', text: msg.copyAndOpen },
-        { id: 'manual', type: 'default', text: msg.copyOnly },
+        { id: 'verify', type: 'default', text: currentLang === 'zh' ? '验证支付' : 'Verify Payment' },
         { id: 'cancel', type: 'cancel', text: msg.cancel }
       ]
     }, (buttonId) => {
@@ -783,10 +784,9 @@ window.payWithTRON = function(planId, usdtAmount, duration) {
             tryOpenWalletApp();
           }, 1000);
         }
-      } else if (buttonId === 'manual') {
-        // 仅复制地址
-        copyToClipboard(tronAddress);
-        tg.showAlert(msg.addressCopied);
+      } else if (buttonId === 'verify') {
+        // 验证支付
+        verifyPaymentForUser(planId, usdtAmount, duration);
       }
     });
   } catch (e) {
@@ -824,6 +824,69 @@ function tryOpenWalletApp() {
       }
     }, index * 300);
   });
+}
+
+// 验证用户支付
+async function verifyPaymentForUser(planId, amount, duration) {
+  const loadingMsg = currentLang === 'zh' 
+    ? '🔍 正在验证支付...\n\n这可能需要几秒钟\n请稍候...'
+    : '🔍 Verifying payment...\n\nThis may take a few seconds\nPlease wait...';
+  
+  try {
+    tg.showAlert(loadingMsg);
+  } catch (e) {
+    alert(loadingMsg);
+  }
+  
+  console.log('🔍 Verifying payment:', amount, 'USDT for', duration, 'days');
+  
+  try {
+    // 检查最近1小时内的交易
+    const result = await paymentVerifier.checkPayment(currentUser.id, amount, 3600000);
+    
+    if (result.success) {
+      // 验证成功
+      const successMsg = currentLang === 'zh'
+        ? `✅ 支付验证成功！\n\n交易ID: ${result.txId.substring(0, 20)}...\n金额: ${result.amount} USDT\n\n正在激活会员...`
+        : `✅ Payment verified!\n\nTx ID: ${result.txId.substring(0, 20)}...\nAmount: ${result.amount} USDT\n\nActivating membership...`;
+      
+      try {
+        tg.showAlert(successMsg);
+      } catch (e) {
+        alert(successMsg);
+      }
+      
+      // 激活会员
+      setTimeout(() => {
+        activatePremium(duration);
+      }, 1000);
+      
+    } else {
+      // 未找到支付
+      const notFoundMsg = currentLang === 'zh'
+        ? '❌ 未找到支付记录\n\n请确保：\n✓ 已完成转账\n✓ 交易已确认（约3-5秒）\n✓ 金额正确\n✓ 网络选择 Nile Testnet\n\n如果刚刚支付，请等待几秒后重试'
+        : '❌ Payment not found\n\nPlease ensure:\n✓ Transfer completed\n✓ Transaction confirmed (~3-5s)\n✓ Correct amount\n✓ Network: Nile Testnet\n\nIf just paid, wait a few seconds and retry';
+      
+      try {
+        tg.showAlert(notFoundMsg);
+      } catch (e) {
+        alert(notFoundMsg);
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ Verification error:', error);
+    
+    const errorMsg = currentLang === 'zh'
+      ? `❌ 验证失败\n\n错误: ${error.message}\n\n请联系管理员手动验证`
+      : `❌ Verification failed\n\nError: ${error.message}\n\nPlease contact admin for manual verification`;
+    
+    try {
+      tg.showAlert(errorMsg);
+    } catch (e) {
+      alert(errorMsg);
+    }
+  }
 }
   
   // USDT TRC20 合约地址 (Nile 测试网)
@@ -973,19 +1036,27 @@ function tryOpenApp(url, timeout = 1000) {
 
 // 激活会员
 function activatePremium(days) {
-  currentUser.membership = {
-    type: 'premium',
-    expireAt: Date.now() + days * 24 * 60 * 60 * 1000
-  };
-  storage.updateUser(currentUser.id, currentUser);
+  // 使用 storage 的 setPremium 方法设置会员状态
+  storage.setPremium(currentUser.id, days);
+  
+  // 重新获取用户数据（包含更新后的会员状态）
+  currentUser = storage.getUser(currentUser.id);
   
   const successMsg = currentLang === 'zh' 
-    ? `🎉 恭喜！会员已激活，有效期 ${days} 天` 
-    : `🎉 Congratulations! Premium activated for ${days} days`;
+    ? `🎉 恭喜！会员已激活，有效期 ${days} 天\n\n您现在拥有无限对话次数！` 
+    : `🎉 Congratulations! Premium activated for ${days} days\n\nYou now have unlimited messages!`;
     
-  tg.showAlert(successMsg);
+  try {
+    tg.showAlert(successMsg);
+  } catch (e) {
+    alert(successMsg);
+  }
+  
+  // 更新UI显示
   renderMembership();
   updateUI();
+  
+  console.log('✅ Premium activated successfully:', currentUser);
 }
 
 // 复制到剪贴板
