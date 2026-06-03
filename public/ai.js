@@ -62,11 +62,32 @@ export class AIService {
     }
     
     // 构建系统提示 - 强调用同语言回复
-    const systemPrompt = `Important: The user is speaking to you in ${currentLanguage}. You MUST respond in the SAME language (${currentLanguage}) that the user is using. Match the user's language exactly.
+    const systemPrompt = `CRITICAL LANGUAGE RULE: You MUST respond in ${currentLanguage}. The user is communicating with you in ${currentLanguage}. Always match the user's language exactly. Never respond in a different language.
 
-${role.systemPrompt}${imageResult?.success ? '\n\n当你发送自拍或照片时，要自然地描述你当时的样子、心情、环境等，让对话更生动。' : ''}`;
+${role.systemPrompt}${imageResult?.success ? '\n\n当你发送自拍或照片时，要自然地描述你当时的样子、心情、环境等，让对话更生动。' : ''}
+
+REMINDER: Respond ONLY in ${currentLanguage}.`;
+    
+    // 在用户消息前也添加强制语言标记
+    const languagePrefix = {
+      'zh': '',
+      'en': '[Respond in English only, do not use Chinese]',
+      'ja': '[日本語のみで返信してください、中国語を使わないでください]',
+      'ko': '[한국어로만 응답하세요, 중국어를 사용하지 마세요]',
+      'ru': '[Отвечайте только на русском, не используйте китайский]',
+      'es': '[Responde solo en español, no uses chino]',
+      'fr': '[Répondez uniquement en français, n\'utilisez pas le chinois]',
+      'de': '[Antworten Sie nur auf Deutsch, verwenden Sie kein Chinesisch]',
+      'pt': '[Responda apenas em português, não use chinês]',
+      'ar': '[الرد باللغة العربية فقط، لا تستخدم الصينية]'
+    };
+    
+    const userMessageWithPrefix = languagePrefix[responseLanguage] 
+      ? `${languagePrefix[responseLanguage]}\n\n${message}`
+      : message;
     
     console.log('📝 Response Language:', currentLanguage);
+    console.log('📝 User message with prefix:', userMessageWithPrefix);
     
     // 构建消息列表
     const messages = [
@@ -76,7 +97,7 @@ ${role.systemPrompt}${imageResult?.success ? '\n\n当你发送自拍或照片时
       },
       {
         role: 'user',
-        content: message
+        content: userMessageWithPrefix
       }
     ];
     
