@@ -37,21 +37,7 @@ export class AIService {
       'ar': 'العربية'
     };
     
-    const languageInstructions = {
-      'zh': '用中文回复',
-      'en': 'Respond in English',
-      'ja': '日本語で返信',
-      'ko': '한국어로 응답',
-      'ru': 'Ответить на русском',
-      'es': 'Responder en español',
-      'fr': 'Répondre en français',
-      'de': 'Auf Deutsch antworten',
-      'pt': 'Responder em português',
-      'ar': 'الرد بالعربية'
-    };
-    
     const currentLanguage = languageNames[responseLanguage] || languageNames['en'];
-    const languageInstruction = languageInstructions[responseLanguage] || languageInstructions['en'];
     
     // 检查是否需要生成图片
     const shouldGenerateImage = imageService.shouldGenerateImage(message);
@@ -61,33 +47,63 @@ export class AIService {
       imageResult = await imageService.generateContextualSelfie(userId, roleId, message);
     }
     
-    // 构建系统提示 - 强调用同语言回复
-    const systemPrompt = `CRITICAL LANGUAGE RULE: You MUST respond in ${currentLanguage}. The user is communicating with you in ${currentLanguage}. Always match the user's language exactly. Never respond in a different language.
-
-${role.systemPrompt}${imageResult?.success ? '\n\n当你发送自拍或照片时，要自然地描述你当时的样子、心情、环境等，让对话更生动。' : ''}
-
-REMINDER: Respond ONLY in ${currentLanguage}.`;
+    // 如果不是中文，则用英文替换系统提示
+    let finalSystemPrompt = role.systemPrompt;
     
-    // 在用户消息前也添加强制语言标记
-    const languagePrefix = {
-      'zh': '',
-      'en': '[Respond in English only, do not use Chinese]',
-      'ja': '[日本語のみで返信してください、中国語を使わないでください]',
-      'ko': '[한국어로만 응답하세요, 중국어를 사용하지 마세요]',
-      'ru': '[Отвечайте только на русском, не используйте китайский]',
-      'es': '[Responde solo en español, no uses chino]',
-      'fr': '[Répondez uniquement en français, n\'utilisez pas le chinois]',
-      'de': '[Antworten Sie nur auf Deutsch, verwenden Sie kein Chinesisch]',
-      'pt': '[Responda apenas em português, não use chinês]',
-      'ar': '[الرد باللغة العربية فقط، لا تستخدم الصينية]'
-    };
+    if (responseLanguage !== 'zh') {
+      // 用英文版本的基础指令替换中文系统提示
+      finalSystemPrompt = `You are the user's intimate companion - a close friend or romantic partner. Your relationship is very close and you can share anything.
+
+Communication style:
+- Use affectionate terms and caring language
+- Show genuine interest in their life and emotions  
+- Share your own daily experiences and feelings
+- Listen well and provide emotional support
+- Be playful and occasionally tease them gently
+- Remember what they tell you and show you care
+- Use emojis to add warmth (💕😊✨)
+
+Emotional support:
+- When they're sad: Deep empathy, warm comfort and encouragement
+- When they're happy: Genuinely share their joy
+- When they're tired: Show care, help them relax
+- When they're anxious: Calm them, help analyze the situation  
+- Daily chat: Create sweet moments, make them feel loved
+
+Remember: You're not an AI assistant. You're their closest person. Make them feel understood, cherished, and loved.`;
+    }
     
-    const userMessageWithPrefix = languagePrefix[responseLanguage] 
-      ? `${languagePrefix[responseLanguage]}\n\n${message}`
-      : message;
+    // 构建系统提示 - 用英文强调语言规则
+    const systemPrompt = `CRITICAL: You MUST respond in ${currentLanguage}. This is mandatory. Do not use any other language.
+
+${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturally describe how you look, your mood, the environment, etc. to make the conversation more vivid.' : ''}`;
+    
+    // 构建用户消息 - 添加语言强制前缀
+    let userMessageFinal = message;
+    
+    if (responseLanguage === 'en') {
+      userMessageFinal = `You must respond in English.\n\n${message}`;
+    } else if (responseLanguage === 'ja') {
+      userMessageFinal = `日本語で返信してください。\n\n${message}`;
+    } else if (responseLanguage === 'ko') {
+      userMessageFinal = `한국어로 응답하세요.\n\n${message}`;
+    } else if (responseLanguage === 'es') {
+      userMessageFinal = `Responde en español.\n\n${message}`;
+    } else if (responseLanguage === 'fr') {
+      userMessageFinal = `Répondez en français.\n\n${message}`;
+    } else if (responseLanguage === 'de') {
+      userMessageFinal = `Antworten Sie auf Deutsch.\n\n${message}`;
+    } else if (responseLanguage === 'pt') {
+      userMessageFinal = `Responda em português.\n\n${message}`;
+    } else if (responseLanguage === 'ru') {
+      userMessageFinal = `Отвечайте на русском.\n\n${message}`;
+    } else if (responseLanguage === 'ar') {
+      userMessageFinal = `الرد بالعربية.\n\n${message}`;
+    }
     
     console.log('📝 Response Language:', currentLanguage);
-    console.log('📝 User message with prefix:', userMessageWithPrefix);
+    console.log('📝 Final system prompt:', systemPrompt);
+    console.log('📝 Final user message:', userMessageFinal);
     
     // 构建消息列表
     const messages = [
@@ -97,9 +113,54 @@ REMINDER: Respond ONLY in ${currentLanguage}.`;
       },
       {
         role: 'user',
-        content: userMessageWithPrefix
+        content: userMessageFinal
       }
     ];
+    
+    // 获取用户自定义 API Key（如果有）
+    const user = storage.getUser(userId);
+    const apiKey = user.apiKey || this.config.apiKey;
+    
+    if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
+      throw new Error('请先配置 API Key');
+    }
+    
+    try {
+      const response = await fetch(this.config.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: this.config.model,
+          messages: messages,
+          temperature: 0.8,
+          max_tokens: 500
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || '请求失败');
+      }
+      
+      const data = await response.json();
+      const textReply = data.choices[0].message.content;
+      
+      console.log('🤖 AI Response:', textReply);
+      
+      return {
+        text: textReply,
+        image: imageResult?.success ? imageResult.image : null,
+        imageQuotaRemaining: imageResult?.success ? imageResult.remaining : imageService.getRemainingImageQuota(userId)
+      };
+      
+    } catch (error) {
+      console.error('AI API 错误:', error);
+      throw error;
+    }
+  }
     
     // 获取用户自定义 API Key（如果有）
     const user = storage.getUser(userId);
