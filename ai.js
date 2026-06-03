@@ -9,6 +9,39 @@ export class AIService {
     this.config = config.ai;
   }
   
+  // 翻译文本（使用免费的 MyMemory API）
+  async translateText(text, targetLang) {
+    const langMap = {
+      'en': 'en',
+      'ja': 'ja',
+      'ko': 'ko',
+      'es': 'es',
+      'fr': 'fr',
+      'de': 'de',
+      'pt': 'pt',
+      'ru': 'ru',
+      'ar': 'ar',
+      'zh': 'zh'
+    };
+    
+    const targetCode = langMap[targetLang] || 'en';
+    
+    try {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh|${targetCode}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.responseData && data.responseData.translatedText) {
+        return data.responseData.translatedText;
+      }
+      
+      throw new Error('Translation failed');
+    } catch (error) {
+      console.error('Translation error:', error);
+      return text; // 返回原文
+    }
+  }
+  
   // 生成 AI 回复（可能包含图片）
   async generateResponse(userId, roleId, message, userLanguage = 'zh') {
     console.log('🌍 System Language:', userLanguage);
@@ -23,7 +56,7 @@ export class AIService {
     // 使用检测到的语言，而不是系统设置的语言
     const responseLanguage = detectedLanguage;
     
-    // 语言映射和指令
+    // 语言映射
     const languageNames = {
       'zh': '中文',
       'en': 'English',
@@ -51,7 +84,6 @@ export class AIService {
     let finalSystemPrompt = role.systemPrompt;
     
     if (responseLanguage !== 'zh') {
-      // 用英文版本的基础指令替换中文系统提示
       finalSystemPrompt = `You are the user's intimate companion - a close friend or romantic partner. Your relationship is very close and you can share anything.
 
 Communication style:
@@ -73,8 +105,8 @@ Emotional support:
 Remember: You're not an AI assistant. You're their closest person. Make them feel understood, cherished, and loved.`;
     }
     
-    // 构建系统提示 - 用英文强调语言规则
-    const systemPrompt = `CRITICAL: You MUST respond in ${currentLanguage}. This is mandatory. Do not use any other language.
+    // 构建系统提示
+    const systemPrompt = `CRITICAL: You MUST respond in ${currentLanguage}. This is mandatory.
 
 ${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturally describe how you look, your mood, the environment, etc. to make the conversation more vivid.' : ''}`;
     
@@ -102,10 +134,8 @@ ${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturall
     }
     
     console.log('📝 Response Language:', currentLanguage);
-    console.log('📝 Final system prompt:', systemPrompt);
-    console.log('📝 Final user message:', userMessageFinal);
     
-    // 构建消息列表 - 添加示例对话强制语言模式
+    // 构建消息列表 - 添加示例对话
     const messages = [
       {
         role: 'system',
@@ -124,44 +154,12 @@ ${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturall
     } else if (responseLanguage === 'ja') {
       messages.push(
         { role: 'user', content: 'こんにちは' },
-        { role: 'assistant', content: 'こんにちは！元気ですか？😊' },
-        { role: 'user', content: '自己紹介して' },
-        { role: 'assistant', content: 'あなたの大切な友達だよ！いつもあなたのことを考えているの。今日は何を話したい？💕' }
-      );
-    } else if (responseLanguage === 'es') {
-      messages.push(
-        { role: 'user', content: 'Hola' },
-        { role: 'assistant', content: '¡Hola! ¿Cómo estás hoy? 😊' }
-      );
-    } else if (responseLanguage === 'fr') {
-      messages.push(
-        { role: 'user', content: 'Bonjour' },
-        { role: 'assistant', content: 'Bonjour! Comment vas-tu aujourd\'hui? 😊' }
-      );
-    } else if (responseLanguage === 'de') {
-      messages.push(
-        { role: 'user', content: 'Hallo' },
-        { role: 'assistant', content: 'Hallo! Wie geht es dir heute? 😊' }
+        { role: 'assistant', content: 'こんにちは！元気ですか？😊' }
       );
     } else if (responseLanguage === 'ko') {
       messages.push(
         { role: 'user', content: '안녕' },
         { role: 'assistant', content: '안녕! 오늘 어때? 😊' }
-      );
-    } else if (responseLanguage === 'pt') {
-      messages.push(
-        { role: 'user', content: 'Olá' },
-        { role: 'assistant', content: 'Olá! Como você está hoje? 😊' }
-      );
-    } else if (responseLanguage === 'ru') {
-      messages.push(
-        { role: 'user', content: 'Привет' },
-        { role: 'assistant', content: 'Привет! Как дела сегодня? 😊' }
-      );
-    } else if (responseLanguage === 'ar') {
-      messages.push(
-        { role: 'user', content: 'مرحبا' },
-        { role: 'assistant', content: 'مرحبا! كيف حالك اليوم؟ 😊' }
       );
     }
     
@@ -202,55 +200,28 @@ ${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturall
       const data = await response.json();
       const textReply = data.choices[0].message.content;
       
-      console.log('🤖 AI Response:', textReply);
+      console.log('🤖 AI Response (original):', textReply);
       
-      return {
-        text: textReply,
-        image: imageResult?.success ? imageResult.image : null,
-        imageQuotaRemaining: imageResult?.success ? imageResult.remaining : imageService.getRemainingImageQuota(userId)
-      };
+      // 检测AI回复的语言
+      const replyLanguage = this.detectMessageLanguage(textReply);
+      console.log('🔍 AI Reply Language:', replyLanguage);
       
-    } catch (error) {
-      console.error('AI API 错误:', error);
-      throw error;
-    }
-  }
-    
-    // 获取用户自定义 API Key（如果有）
-    const user = storage.getUser(userId);
-    const apiKey = user.apiKey || this.config.apiKey;
-    
-    if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
-      throw new Error('请先配置 API Key');
-    }
-    
-    try {
-      const response = await fetch(this.config.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: this.config.model,
-          messages: messages,
-          temperature: 0.8,
-          max_tokens: 500
-        })
-      });
+      let finalReply = textReply;
       
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || '请求失败');
+      // 如果回复语言和期望语言不匹配，则翻译
+      if (replyLanguage !== responseLanguage && responseLanguage !== 'zh') {
+        console.log('⚠️ Language mismatch! Translating from Chinese to', currentLanguage);
+        try {
+          finalReply = await this.translateText(textReply, responseLanguage);
+          console.log('✅ Translated reply:', finalReply);
+        } catch (translateError) {
+          console.error('Translation failed, using original:', translateError);
+          finalReply = textReply;
+        }
       }
       
-      const data = await response.json();
-      const textReply = data.choices[0].message.content;
-      
-      console.log('🤖 AI Response:', textReply);
-      
       return {
-        text: textReply,
+        text: finalReply,
         image: imageResult?.success ? imageResult.image : null,
         imageQuotaRemaining: imageResult?.success ? imageResult.remaining : imageService.getRemainingImageQuota(userId)
       };
@@ -268,7 +239,7 @@ ${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturall
       return 'zh';
     }
     
-    // 日文检测（平假名、片假名、日文汉字）
+    // 日文检测（平假名、片假名）
     if (/[\u3040-\u309f\u30a0-\u30ff]/.test(message)) {
       return 'ja';
     }
@@ -289,31 +260,31 @@ ${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturall
     }
     
     // 常见英语词汇模式检测
-    const commonEnglishWords = /\b(hello|hi|hey|good|morning|afternoon|evening|night|how|are|you|what|when|where|why|who|the|is|am|was|were|have|has|had|do|does|did|can|could|will|would|should|may|might|must)\b/i;
+    const commonEnglishWords = /\b(hello|hi|hey|good|morning|afternoon|evening|night|how|are|you|what|when|where|why|who|the|is|am|was|were|have|has|had|do|does|did|can|could|will|would|should|may|might|must|name|your)\b/i;
     if (commonEnglishWords.test(message)) {
       return 'en';
     }
     
     // 西班牙语特征词
-    const commonSpanishWords = /\b(hola|buenos|días|noches|cómo|estás|qué|cuándo|dónde|por|para|con|el|la|los|las|soy|eres|está|están|tengo|tienes)\b/i;
+    const commonSpanishWords = /\b(hola|buenos|días|noches|cómo|estás|qué|cuándo|dónde|por|para|con|el|la|los|las|soy|eres|está|están)\b/i;
     if (commonSpanishWords.test(message)) {
       return 'es';
     }
     
     // 法语特征词
-    const commonFrenchWords = /\b(bonjour|salut|comment|allez|vous|êtes|suis|avez|avec|pour|dans|qui|que|quoi|où|quand|pourquoi)\b/i;
+    const commonFrenchWords = /\b(bonjour|salut|comment|allez|vous|êtes|suis|avez|avec|pour|dans|qui|que|quoi|où|quand)\b/i;
     if (commonFrenchWords.test(message)) {
       return 'fr';
     }
     
     // 德语特征词
-    const commonGermanWords = /\b(hallo|guten|tag|morgen|abend|wie|geht|sind|haben|mit|für|der|die|das|ein|eine|was|wann|wo|warum|wer)\b/i;
+    const commonGermanWords = /\b(hallo|guten|tag|morgen|wie|geht|sind|haben|mit|für|der|die|das|ein|eine|was|wann|wo)\b/i;
     if (commonGermanWords.test(message)) {
       return 'de';
     }
     
     // 葡萄牙语特征词
-    const commonPortugueseWords = /\b(olá|oi|bom|dia|noite|como|está|você|tem|para|com|que|quando|onde|por|quê|quem)\b/i;
+    const commonPortugueseWords = /\b(olá|oi|bom|dia|noite|como|está|você|tem|para|com|que|quando|onde|por)\b/i;
     if (commonPortugueseWords.test(message)) {
       return 'pt';
     }
