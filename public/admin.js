@@ -1,5 +1,54 @@
 // iFriendly AI - 管理后台
-import { storage } from './storage.js';
+// import { storage } from './storageHelper.js'; // 移除依赖，直接使用 localStorage
+
+// Storage 辅助函数（内联实现）
+const storageHelper = {
+  getUsers() {
+    try {
+      return JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+    } catch {
+      return {};
+    }
+  },
+  
+  getUser(userId) {
+    const users = this.getUsers();
+    return users[userId] || null;
+  },
+  
+  updateUser(userId, updates) {
+    const users = this.getUsers();
+    if (users[userId]) {
+      users[userId] = { ...users[userId], ...updates };
+      localStorage.setItem('ifriendly_users', JSON.stringify(users));
+    }
+  },
+  
+  getConversations() {
+    try {
+      return JSON.parse(localStorage.getItem('ifriendly_conversations') || '{}');
+    } catch {
+      return {};
+    }
+  },
+  
+  getPayments() {
+    try {
+      return JSON.parse(localStorage.getItem('ifriendly_payments') || '[]');
+    } catch {
+      return [];
+    }
+  },
+  
+  savePayments(payments) {
+    localStorage.setItem('ifriendly_payments', JSON.stringify(payments));
+  },
+  
+  isPremium(user) {
+    if (!user || !user.isPremium || !user.premiumUntil) return false;
+    return new Date(user.premiumUntil) > new Date();
+  }
+};
 
 // 管理员配置
 const ADMIN_CONFIG = {
@@ -406,7 +455,7 @@ function confirmAddPayment() {
   }
   
   const plan = PLAN_PRICES[planId];
-  const user = storage.getUser(userId);
+  const user = storageHelper.getUser(userId);
   
   const payment = {
     userId: userId,
@@ -433,11 +482,11 @@ function confirmAddPayment() {
 
 // 激活用户会员
 function activateUserPremium(userId, days) {
-  const user = storage.getUser(userId);
+  const user = storageHelper.getUser(userId);
   const currentExpireAt = user.membership?.expireAt || Date.now();
   const newExpireAt = Math.max(Date.now(), currentExpireAt) + days * 24 * 60 * 60 * 1000;
   
-  storage.updateUser(userId, {
+  storageHelper.updateUser(userId, {
     membership: {
       type: 'premium',
       expireAt: newExpireAt
