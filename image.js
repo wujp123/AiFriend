@@ -186,6 +186,16 @@ export class ImageService {
       
     } catch (error) {
       console.error('图片生成失败:', error);
+      
+      // 检查是否是速率限制错误
+      if (error.message && error.message.includes('Queue full')) {
+        return {
+          success: false,
+          reason: 'rate_limit',
+          message: '图片服务繁忙，请稍后再试（免费服务有速率限制）'
+        };
+      }
+      
       return {
         success: false,
         reason: 'generation_failed',

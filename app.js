@@ -547,7 +547,8 @@ async function sendMessage() {
     const result = await aiService.generateResponse(
       currentUser.id,
       currentUser.currentRole,
-      message
+      message,
+      currentLang  // 传递当前语言
     );
     
     addMessage(result.text, false);
@@ -564,7 +565,8 @@ async function sendMessage() {
     
   } catch (error) {
     console.error('AI Error:', error);
-    addMessage('抱歉，出现错误了: ' + error.message, false);
+    const errorMsg = t('errorSending', currentLang) + ': ' + error.message;
+    addMessage(errorMsg, false);
   } finally {
     elements.sendButton.disabled = false;
   }

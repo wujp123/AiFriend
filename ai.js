@@ -10,9 +10,25 @@ export class AIService {
   }
   
   // 生成 AI 回复（可能包含图片）
-  async generateResponse(userId, roleId, message) {
+  async generateResponse(userId, roleId, message, userLanguage = 'zh') {
     const role = getRole(roleId);
     const history = storage.getConversationHistory(userId, roleId, 10);
+    
+    // 语言映射
+    const languageNames = {
+      'zh': '中文',
+      'en': 'English',
+      'ja': '日本語',
+      'ko': '한국어',
+      'ru': 'Русский',
+      'es': 'Español',
+      'fr': 'Français',
+      'de': 'Deutsch',
+      'pt': 'Português',
+      'ar': 'العربية'
+    };
+    
+    const languageInstruction = `\n\nIMPORTANT: You must respond in ${languageNames[userLanguage] || 'English'} language. All your responses should be in ${languageNames[userLanguage] || 'English'}. Do not use other languages unless the user specifically asks.`;
     
     // 检查是否需要生成图片
     const shouldGenerateImage = imageService.shouldGenerateImage(message);
@@ -26,7 +42,7 @@ export class AIService {
     const messages = [
       {
         role: 'system',
-        content: role.systemPrompt + (imageResult?.success ? 
+        content: role.systemPrompt + languageInstruction + (imageResult?.success ? 
           '\n\n当你发送自拍或照片时，要自然地描述你当时的样子、心情、环境等，让对话更生动。' : '')
       }
     ];
