@@ -264,6 +264,26 @@
       </table>
     </div>
     
+    <!-- 用户活动日志 (新增) -->
+    <div class="section">
+      <div class="section-title">📋 用户活动日志</div>
+      <table>
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>类型</th>
+            <th>用户</th>
+            <th>详情</th>
+          </tr>
+        </thead>
+        <tbody id="userLogsTable">
+          <tr>
+            <td colspan="4" class="empty">暂无活动日志</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
     <!-- 调试信息 -->
     <div class="section">
       <div class="section-title">🔧 调试信息</div>
@@ -295,6 +315,7 @@
       renderUserTable(users);
       renderConvTable(conversations, users);
       renderPaymentTable(payments, users);
+      renderUserLogsTable(); // 新增：渲染用户日志
       
       // 隐藏/显示提示
       if (Object.keys(users).length === 0) {
@@ -456,6 +477,54 @@
         `;
         tbody.innerHTML += row;
       });
+    }
+    
+    // 渲染用户日志表格（新增）
+    function renderUserLogsTable() {
+      const tbody = document.getElementById('userLogsTable');
+      tbody.innerHTML = '';
+      
+      try {
+        const logs = JSON.parse(localStorage.getItem('ifriendly_user_logs') || '[]');
+        
+        if (logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="empty">暂无活动日志</td></tr>';
+          return;
+        }
+        
+        // 按时间倒序
+        logs.sort((a, b) => b.timestamp - a.timestamp);
+        
+        logs.forEach(log => {
+          const time = new Date(log.timestamp).toLocaleString('zh-CN');
+          let type = '';
+          let details = '';
+          
+          if (log.type === 'new_user') {
+            type = '🆕 新用户';
+            details = `语言: ${log.language || '-'}`;
+          } else if (log.type === 'payment') {
+            type = '💰 支付';
+            details = `${log.planId} - $${log.amount}`;
+          } else if (log.type === 'membership_activation') {
+            type = '✨ 会员激活';
+            details = `${log.duration}天`;
+          }
+          
+          const row = `
+            <tr>
+              <td>${time}</td>
+              <td>${type}</td>
+              <td>${log.userName || log.userId}</td>
+              <td>${details}</td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      } catch (e) {
+        console.error('Error loading user logs:', e);
+        tbody.innerHTML = '<tr><td colspan="4" class="empty">加载失败</td></tr>';
+      }
     }
     
     // 检查 localStorage

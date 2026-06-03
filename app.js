@@ -142,8 +142,22 @@ async function init() {
   if (isNewUser) {
     console.log('🆕 New user detected, logging to Telegram...');
     try {
+      // 保存用户注册记录到 localStorage（供后台查看）
+      const userLogs = JSON.parse(localStorage.getItem('ifriendly_user_logs') || '[]');
+      userLogs.push({
+        type: 'new_user',
+        userId: currentUser.id,
+        userName: currentUser.firstName || currentUser.username || 'Unknown',
+        username: currentUser.username,
+        language: currentUser.language,
+        timestamp: Date.now(),
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem('ifriendly_user_logs', JSON.stringify(userLogs));
+      
+      // 发送到 Telegram
       await telegramLogger.logNewUser(currentUser);
-      console.log('✅ New user logged to Telegram');
+      console.log('✅ New user logged to Telegram and localStorage');
     } catch (error) {
       console.error('Failed to log new user:', error);
     }
@@ -886,14 +900,23 @@ async function verifyPaymentForUser(planId, amount, duration) {
           status: 'completed'
         };
         
-        // 保存到 localStorage
+        // 保存到 localStorage（ifriendly_payments - 已存在）
         const payments = JSON.parse(localStorage.getItem('ifriendly_payments') || '[]');
         payments.push(payment);
         localStorage.setItem('ifriendly_payments', JSON.stringify(payments));
         
+        // 保存到日志（ifriendly_user_logs - 供后台统一查看）
+        const userLogs = JSON.parse(localStorage.getItem('ifriendly_user_logs') || '[]');
+        userLogs.push({
+          type: 'payment',
+          ...payment,
+          createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('ifriendly_user_logs', JSON.stringify(userLogs));
+        
         // 发送到 Telegram
         await telegramLogger.logPayment(payment);
-        console.log('✅ Payment logged to Telegram');
+        console.log('✅ Payment logged to Telegram and localStorage');
       } catch (error) {
         console.error('Failed to log payment:', error);
       }
@@ -1188,13 +1211,28 @@ function activatePremium(days) {
   // 📝 记录会员激活到 Telegram
   try {
     const expireDate = new Date(currentUser.premiumUntil);
-    telegramLogger.logMembershipActivation(
+    
+    // 保存到日志（ifriendly_user_logs）
+    const userLogs = JSON.parse(localStorage.getItem('ifriendly_user_logs') || '[]');
+    userLogs.push({
+      type: 'membership_activation',
+      userId: currentUser.id,
+      userName: currentUser.firstName || currentUser.username || 'Unknown',
+      duration: days,
+      expireDate: expireDate.toISOString(),
+      timestamp: Date.now(),
+      createdAt: new Date().toISOString()
+    });
+    localStorage.setItem('ifriendly_user_logs', JSON.stringify(userLogs));
+    
+    // 发送到 Telegram
+    await telegramLogger.logMembershipActivation(
       currentUser.id,
       currentUser.firstName || currentUser.username || 'Unknown',
       days,
       expireDate
     );
-    console.log('✅ Membership activation logged to Telegram');
+    console.log('✅ Membership activation logged to Telegram and localStorage');
   } catch (error) {
     console.error('Failed to log membership activation:', error);
   }
