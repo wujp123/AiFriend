@@ -204,20 +204,23 @@ ${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturall
       
       // 检测AI回复的语言
       const replyLanguage = this.detectMessageLanguage(textReply);
-      console.log('🔍 AI Reply Language:', replyLanguage);
+      console.log('🔍 AI Reply Language detected:', replyLanguage);
+      console.log('🎯 Expected language:', responseLanguage);
       
       let finalReply = textReply;
       
       // 如果回复语言和期望语言不匹配，则翻译
-      if (replyLanguage !== responseLanguage && responseLanguage !== 'zh') {
-        console.log('⚠️ Language mismatch! Translating from Chinese to', currentLanguage);
+      if (replyLanguage === 'zh' && responseLanguage !== 'zh') {
+        console.log('⚠️ Language mismatch! AI replied in Chinese, translating to', currentLanguage);
         try {
           finalReply = await this.translateText(textReply, responseLanguage);
           console.log('✅ Translated reply:', finalReply);
         } catch (translateError) {
-          console.error('Translation failed, using original:', translateError);
+          console.error('❌ Translation failed:', translateError);
           finalReply = textReply;
         }
+      } else if (replyLanguage === responseLanguage) {
+        console.log('✅ Language match! No translation needed.');
       }
       
       return {
