@@ -1,4 +1,6 @@
 // AiFriend - 主应用逻辑
+// Version: 2.0 - Wallet Integration
+// Last Update: 2024-12-10
 import { t, detectLanguage, getSupportedLanguages } from './i18n.js';
 import { roles, getRolesByCategory, getRole, isRoleFree } from './roles.js';
 import { storage } from './storage.js';

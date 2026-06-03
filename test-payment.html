@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支付测试 - 版本检查</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .card {
+      background: white;
+      color: #333;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    h1 {
+      margin-top: 0;
+    }
+    .status {
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px 5px;
+      transition: all 0.3s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .code {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 14px;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔍 支付功能测试</h1>
+    
+    <div id="status"></div>
+    
+    <h3>📋 版本信息</h3>
+    <div class="code" id="version">
+      检测中...
+    </div>
+    
+    <h3>🧪 测试按钮</h3>
+    <button onclick="testTronPayment()">测试 TRON 支付</button>
+    <button onclick="clearCache()">清除缓存</button>
+    <button onclick="window.location.reload(true)">强制刷新</button>
+    
+    <h3>💡 如果仍显示旧版本</h3>
+    <ol>
+      <li>按 <code>Ctrl + Shift + R</code> (Windows) 或 <code>Cmd + Shift + R</code> (Mac) 强制刷新</li>
+      <li>清除浏览器缓存：设置 → 隐私与安全 → 清除浏览数据</li>
+      <li>使用隐身模式测试</li>
+      <li>等待 5 分钟，GitHub Pages 部署需要时间</li>
+    </ol>
+    
+    <h3>📞 调试信息</h3>
+    <div class="code" id="debug"></div>
+  </div>
+
+  <script>
+    // 检测版本
+    function checkVersion() {
+      const versionInfo = document.getElementById('version');
+      const statusDiv = document.getElementById('status');
+      
+      // 检查 window.payWithTRON 函数
+      if (typeof window.payWithTRON === 'function') {
+        const funcStr = window.payWithTRON.toString();
+        
+        if (funcStr.includes('openWallet') && funcStr.includes('打开钱包支付')) {
+          statusDiv.innerHTML = '<div class="status success">✅ 新版本已加载！包含钱包集成功能</div>';
+          versionInfo.innerHTML = `
+版本: v2.0 - 钱包集成版
+时间: ${new Date().toLocaleString()}
+功能: 支持 TronLink 和 imToken
+状态: 正常
+          `;
+        } else if (funcStr.includes('复制地址')) {
+          statusDiv.innerHTML = '<div class="status error">❌ 旧版本！仅支持复制地址</div>';
+          versionInfo.innerHTML = `
+版本: v1.0 - 基础版
+建议: 请清除缓存并刷新页面
+          `;
+        } else {
+          statusDiv.innerHTML = '<div class="status warning">⚠️ 无法确定版本</div>';
+        }
+      } else {
+        statusDiv.innerHTML = '<div class="status error">❌ 支付函数未找到</div>';
+      }
+      
+      // 显示调试信息
+      const debugInfo = document.getElementById('debug');
+      debugInfo.innerHTML = `
+页面URL: ${window.location.href}
+用户代理: ${navigator.userAgent}
+时间戳: ${Date.now()}
+缓存状态: ${window.caches ? '支持' : '不支持'}
+      `;
+    }
+    
+    // 测试 TRON 支付
+    function testTronPayment() {
+      if (typeof window.payWithTRON === 'function') {
+        alert('正在调用 TRON 支付函数...\n\n如果显示"打开钱包支付"按钮，说明新版本已生效！');
+        
+        // 模拟调用（使用测试参数）
+        try {
+          // 先检查函数签名
+          const funcStr = window.payWithTRON.toString();
+          console.log('支付函数代码:', funcStr);
+          
+          if (funcStr.includes('openWallet')) {
+            alert('✅ 确认：新版本支付函数已加载！\n包含"打开钱包"功能');
+          } else {
+            alert('❌ 警告：仍是旧版本支付函数\n请清除缓存后重试');
+          }
+        } catch (e) {
+          alert('调用出错：' + e.message);
+        }
+      } else {
+        alert('❌ 支付函数不存在\n请确保在正确的页面');
+      }
+    }
+    
+    // 清除缓存
+    async function clearCache() {
+      try {
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(
+            cacheNames.map(cacheName => caches.delete(cacheName))
+          );
+          alert('✅ 缓存已清除！\n请刷新页面查看最新版本');
+        } else {
+          alert('⚠️ 浏览器不支持缓存 API\n请手动清除浏览器缓存');
+        }
+      } catch (e) {
+        alert('清除缓存失败：' + e.message);
+      }
+    }
+    
+    // 页面加载时检测
+    window.addEventListener('load', () => {
+      setTimeout(checkVersion, 500);
+    });
+  </script>
+</body>
+</html>
