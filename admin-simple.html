@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户数据管理</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    header {
+      background: white;
+      padding: 20px 30px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    h1 {
+      color: #333;
+      font-size: 24px;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .stat-value {
+      font-size: 36px;
+      font-weight: bold;
+      color: #667eea;
+      margin: 10px 0;
+    }
+    
+    .stat-label {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .section {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #667eea;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    tr:hover {
+      background: #f9fafb;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .badge.premium {
+      background: #ffd700;
+      color: #333;
+    }
+    
+    .badge.free {
+      background: #e5e7eb;
+      color: #666;
+    }
+    
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    
+    button:hover {
+      background: #5568d3;
+    }
+    
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+    
+    .guide {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .guide-title {
+      font-weight: 600;
+      color: #856404;
+      margin-bottom: 10px;
+    }
+    
+    .guide-text {
+      color: #856404;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 iFriendly AI - 用户数据管理</h1>
+      <button onclick="loadData()">🔄 刷新数据</button>
+    </header>
+    
+    <!-- 提示信息 -->
+    <div class="guide" id="guideBox">
+      <div class="guide-title">💡 如何查看用户数据？</div>
+      <div class="guide-text">
+        <strong>当前没有用户数据。</strong>用户数据存储在浏览器的 localStorage 中。<br><br>
+        <strong>要生成用户数据，请：</strong><br>
+        1. 访问主应用：<a href="https://wujp123.github.io/AiFriend/" target="_blank">https://wujp123.github.io/AiFriend/</a><br>
+        2. 与AI角色聊天几句<br>
+        3. 然后返回此页面刷新即可看到数据<br><br>
+        <strong>注意：</strong>localStorage 数据是按域名隔离的，确保在同一个域名下访问。
+      </div>
+    </div>
+    
+    <!-- 统计卡片 -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">总用户数</div>
+        <div class="stat-value" id="totalUsers">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">会员用户</div>
+        <div class="stat-value" id="premiumUsers">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">总对话数</div>
+        <div class="stat-value" id="totalConvs">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">支付记录</div>
+        <div class="stat-value" id="totalPayments">0</div>
+      </div>
+    </div>
+    
+    <!-- 用户列表 -->
+    <div class="section">
+      <div class="section-title">👥 用户列表</div>
+      <table>
+        <thead>
+          <tr>
+            <th>用户ID</th>
+            <th>名称</th>
+            <th>状态</th>
+            <th>会员到期</th>
+            <th>剩余次数</th>
+            <th>注册时间</th>
+          </tr>
+        </thead>
+        <tbody id="userTable">
+          <tr>
+            <td colspan="6" class="empty">暂无用户数据</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- 对话统计 -->
+    <div class="section">
+      <div class="section-title">💬 对话统计</div>
+      <table>
+        <thead>
+          <tr>
+            <th>用户</th>
+            <th>角色</th>
+            <th>消息数</th>
+            <th>最后更新</th>
+          </tr>
+        </thead>
+        <tbody id="convTable">
+          <tr>
+            <td colspan="4" class="empty">暂无对话数据</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- 支付记录 -->
+    <div class="section">
+      <div class="section-title">💰 支付记录</div>
+      <table>
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>用户ID</th>
+            <th>套餐</th>
+            <th>金额</th>
+            <th>交易ID</th>
+          </tr>
+        </thead>
+        <tbody id="paymentTable">
+          <tr>
+            <td colspan="5" class="empty">暂无支付记录</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- 调试信息 -->
+    <div class="section">
+      <div class="section-title">🔧 调试信息</div>
+      <button onclick="checkStorage()">检查 localStorage</button>
+      <button onclick="createTestUser()">创建测试用户</button>
+      <button onclick="exportData()">导出数据</button>
+      <div id="debugInfo" style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 8px; font-family: monospace; font-size: 12px;"></div>
+    </div>
+  </div>
+
+  <script>
+    // 加载数据
+    function loadData() {
+      console.log('🔄 Loading data...');
+      
+      // 读取用户数据
+      const users = getUsers();
+      const conversations = getConversations();
+      const payments = getPayments();
+      
+      console.log('Users:', users);
+      console.log('Conversations:', conversations);
+      console.log('Payments:', payments);
+      
+      // 更新统计
+      updateStats(users, conversations, payments);
+      
+      // 渲染表格
+      renderUserTable(users);
+      renderConvTable(conversations, users);
+      renderPaymentTable(payments, users);
+      
+      // 隐藏/显示提示
+      if (Object.keys(users).length === 0) {
+        document.getElementById('guideBox').style.display = 'block';
+      } else {
+        document.getElementById('guideBox').style.display = 'none';
+      }
+      
+      console.log('✅ Data loaded');
+    }
+    
+    // 获取用户
+    function getUsers() {
+      try {
+        return JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+      } catch (e) {
+        console.error('Error loading users:', e);
+        return {};
+      }
+    }
+    
+    // 获取对话
+    function getConversations() {
+      try {
+        return JSON.parse(localStorage.getItem('ifriendly_conversations') || '{}');
+      } catch (e) {
+        console.error('Error loading conversations:', e);
+        return {};
+      }
+    }
+    
+    // 获取支付
+    function getPayments() {
+      try {
+        return JSON.parse(localStorage.getItem('ifriendly_payments') || '[]');
+      } catch (e) {
+        console.error('Error loading payments:', e);
+        return [];
+      }
+    }
+    
+    // 更新统计
+    function updateStats(users, conversations, payments) {
+      const userList = Object.values(users);
+      const totalUsers = userList.length;
+      
+      // 会员用户
+      const premiumUsers = userList.filter(u => {
+        return u.isPremium && u.premiumUntil && new Date(u.premiumUntil) > new Date();
+      }).length;
+      
+      // 总对话数
+      let totalConvs = 0;
+      Object.values(conversations).forEach(userConvs => {
+        totalConvs += Object.keys(userConvs).length;
+      });
+      
+      document.getElementById('totalUsers').textContent = totalUsers;
+      document.getElementById('premiumUsers').textContent = premiumUsers;
+      document.getElementById('totalConvs').textContent = totalConvs;
+      document.getElementById('totalPayments').textContent = payments.length;
+    }
+    
+    // 渲染用户表格
+    function renderUserTable(users) {
+      const tbody = document.getElementById('userTable');
+      tbody.innerHTML = '';
+      
+      const userList = Object.entries(users);
+      
+      if (userList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无用户数据</td></tr>';
+        return;
+      }
+      
+      userList.forEach(([userId, user]) => {
+        const isPremium = user.isPremium && user.premiumUntil && new Date(user.premiumUntil) > new Date();
+        const badge = isPremium ? '<span class="badge premium">会员</span>' : '<span class="badge free">免费</span>';
+        const expiry = isPremium ? new Date(user.premiumUntil).toLocaleDateString('zh-CN') : '-';
+        const remaining = isPremium ? '∞' : (user.freeTries || 0);
+        const created = user.createdAt ? new Date(user.createdAt).toLocaleDateString('zh-CN') : '-';
+        const name = user.firstName || user.username || '匿名';
+        
+        const row = `
+          <tr>
+            <td title="${userId}">${userId.substring(0, 20)}...</td>
+            <td>${name}</td>
+            <td>${badge}</td>
+            <td>${expiry}</td>
+            <td>${remaining}</td>
+            <td>${created}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    }
+    
+    // 渲染对话表格
+    function renderConvTable(conversations, users) {
+      const tbody = document.getElementById('convTable');
+      tbody.innerHTML = '';
+      
+      const convList = [];
+      Object.entries(conversations).forEach(([userId, userConvs]) => {
+        Object.entries(userConvs).forEach(([roleId, conv]) => {
+          convList.push({
+            userId,
+            roleId,
+            messageCount: conv.messages ? conv.messages.length : 0,
+            updatedAt: conv.updatedAt
+          });
+        });
+      });
+      
+      if (convList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty">暂无对话数据</td></tr>';
+        return;
+      }
+      
+      convList.forEach(conv => {
+        const user = users[conv.userId];
+        const userName = user ? (user.firstName || user.username || '未知') : '已删除';
+        const updated = conv.updatedAt ? new Date(conv.updatedAt).toLocaleString('zh-CN') : '-';
+        
+        const row = `
+          <tr>
+            <td>${userName}</td>
+            <td>${conv.roleId}</td>
+            <td>${conv.messageCount}</td>
+            <td>${updated}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    }
+    
+    // 渲染支付表格
+    function renderPaymentTable(payments, users) {
+      const tbody = document.getElementById('paymentTable');
+      tbody.innerHTML = '';
+      
+      if (payments.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无支付记录</td></tr>';
+        return;
+      }
+      
+      payments.forEach(payment => {
+        const time = new Date(payment.timestamp || payment.createdAt).toLocaleString('zh-CN');
+        const txId = payment.txId ? payment.txId.substring(0, 16) + '...' : '-';
+        
+        const row = `
+          <tr>
+            <td>${time}</td>
+            <td>${payment.userId}</td>
+            <td>${payment.planId}</td>
+            <td>${payment.amount} USDT</td>
+            <td title="${payment.txId}">${txId}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    }
+    
+    // 检查 localStorage
+    function checkStorage() {
+      const debug = document.getElementById('debugInfo');
+      const info = {
+        '当前域名': window.location.hostname,
+        '当前协议': window.location.protocol,
+        'localStorage可用': typeof localStorage !== 'undefined',
+        '用户数据': localStorage.getItem('ifriendly_users') ? 'yes ✅' : 'no ❌',
+        '对话数据': localStorage.getItem('ifriendly_conversations') ? 'yes ✅' : 'no ❌',
+        '支付数据': localStorage.getItem('ifriendly_payments') ? 'yes ✅' : 'no ❌',
+        'localStorage大小': new Blob([JSON.stringify(localStorage)]).size + ' bytes'
+      };
+      
+      debug.innerHTML = '<pre>' + JSON.stringify(info, null, 2) + '</pre>';
+    }
+    
+    // 创建测试用户
+    function createTestUser() {
+      const users = getUsers();
+      const testId = 'test_' + Date.now();
+      
+      users[testId] = {
+        id: testId,
+        firstName: '测试用户',
+        username: 'testuser',
+        language: 'zh',
+        currentRole: 'sister',
+        freeTries: 5,
+        lastReset: new Date().toDateString(),
+        isPremium: false,
+        premiumUntil: null,
+        createdAt: new Date().toISOString(),
+        apiKey: ''
+      };
+      
+      localStorage.setItem('ifriendly_users', JSON.stringify(users));
+      alert('✅ 测试用户已创建！');
+      loadData();
+    }
+    
+    // 导出数据
+    function exportData() {
+      const data = {
+        users: getUsers(),
+        conversations: getConversations(),
+        payments: getPayments(),
+        exportTime: new Date().toISOString()
+      };
+      
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ifriendly_data_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+    }
+    
+    // 页面加载时初始化
+    window.addEventListener('load', () => {
+      loadData();
+      checkStorage();
+    });
+  </script>
+</body>
+</html>
