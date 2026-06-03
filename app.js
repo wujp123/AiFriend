@@ -1,10 +1,11 @@
 // AiFriend - 主应用逻辑
-import { t, detectLanguage } from './i18n.js';
+import { t, detectLanguage, getSupportedLanguages } from './i18n.js';
 import { roles, getRolesByCategory, getRole, isRoleFree } from './roles.js';
 import { storage } from './storage.js';
 import { aiService } from './ai.js';
 import { config } from './config.js';
 import { imageService } from './image.js';
+import { languageDetector } from './lang-detect.js';
 
 // Telegram Web App
 const tg = window.Telegram.WebApp;
@@ -59,12 +60,23 @@ const elements = {
 };
 
 // 初始化
-function init() {
+async function init() {
   const user = tg.initDataUnsafe.user;
   const userId = user?.id || 'demo_user';
   
   currentUser = storage.getUser(userId);
-  currentLang = detectLanguage(user?.language_code) || currentUser.language;
+  
+  // 智能语言检测（优先级：用户设置 > Telegram > IP > 浏览器）
+  if (currentUser.language) {
+    currentLang = currentUser.language;
+    console.log(`Using saved user language: ${currentLang}`);
+  } else {
+    // 使用智能语言检测
+    currentLang = await languageDetector.detect(user?.language_code, currentUser.language);
+    currentUser.language = currentLang;
+    storage.updateUser(userId, currentUser);
+    console.log(`Auto-detected language: ${currentLang}`);
+  }
   
   // 检查是否首次访问
   const hasVisitedBefore = localStorage.getItem('hasVisited');
@@ -156,6 +168,15 @@ function updateUI() {
   }
   
   elements.messageInput.placeholder = t('typingPlaceholder', currentLang);
+  
+  // RTL support for Arabic
+  if (currentLang === 'ar') {
+    document.body.setAttribute('dir', 'rtl');
+    document.body.style.fontFamily = 'Tahoma, Arial, sans-serif';
+  } else {
+    document.body.setAttribute('dir', 'ltr');
+    document.body.style.fontFamily = '';
+  }
 }
 
 // 渲染角色广场
@@ -356,8 +377,21 @@ function renderSettings() {
 function changeLanguage() {
   currentLang = elements.languageSelect.value;
   storage.updateUser(currentUser.id, { language: currentLang });
+  console.log(`Language changed to: ${currentLang}`);
   updateUI();
-  tg.showAlert('语言已切换');
+  
+  // 刷新当前视图以应用新语言
+  if (currentView === 'roleSquare') {
+    renderRoleSquare();
+  } else if (currentView === 'chatHistory') {
+    renderChatHistory();
+  } else if (currentView === 'membership') {
+    renderMembership();
+  } else if (currentView === 'settings') {
+    renderSettings();
+  }
+  
+  tg.showAlert(t('cleared', currentLang)); // 显示语言已切换
 }
 
 // 保存API Key
