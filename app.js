@@ -387,12 +387,22 @@ function renderChatHistory() {
     timestamp.className = 'history-time';
     timestamp.textContent = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString() : '';
     
+    // 删除按钮
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'history-delete-btn';
+    deleteBtn.textContent = '🗑️';
+    deleteBtn.onclick = (e) => {
+      e.stopPropagation(); // 防止触发卡片点击事件
+      deleteRoleConversation(roleId);
+    };
+    
     historyInfo.appendChild(roleName);
     historyInfo.appendChild(lastMsgPreview);
     
     historyCard.appendChild(roleAvatar);
     historyCard.appendChild(historyInfo);
     historyCard.appendChild(timestamp);
+    historyCard.appendChild(deleteBtn);
     
     historyCard.addEventListener('click', () => {
       currentUser.currentRole = roleId;
@@ -492,14 +502,78 @@ function saveApiKey() {
 
 // 清空历史
 function clearHistory() {
-  tg.showConfirm('确定清空所有对话记录吗？', (confirmed) => {
-    if (confirmed) {
+  const confirmMessage = t('clearConfirm', currentLang);
+  const clearedMessage = t('cleared', currentLang);
+  
+  try {
+    tg.showConfirm(confirmMessage, (confirmed) => {
+      if (confirmed) {
+        storage.clearConversation(currentUser.id, currentUser.currentRole);
+        elements.chatMessages.innerHTML = '';
+        addWelcomeMessage();
+        tg.showAlert(clearedMessage);
+      }
+    });
+  } catch (e) {
+    // Fallback for non-Telegram environment
+    if (confirm(confirmMessage)) {
       storage.clearConversation(currentUser.id, currentUser.currentRole);
       elements.chatMessages.innerHTML = '';
       addWelcomeMessage();
-      tg.showAlert('已清空');
+      alert(clearedMessage);
     }
-  });
+  }
+}
+
+// 清空所有历史（所有角色）
+function clearAllHistory() {
+  const confirmMessage = '确定要清空所有角色的对话记录吗？此操作不可恢复！';
+  
+  try {
+    tg.showConfirm(confirmMessage, (confirmed) => {
+      if (confirmed) {
+        const allConvs = storage.getConversations(currentUser.id);
+        Object.keys(allConvs).forEach(roleId => {
+          storage.clearConversation(currentUser.id, roleId);
+        });
+        elements.chatMessages.innerHTML = '';
+        tg.showAlert('所有对话记录已清空');
+        renderChatHistory();
+      }
+    });
+  } catch (e) {
+    if (confirm(confirmMessage)) {
+      const allConvs = storage.getConversations(currentUser.id);
+      Object.keys(allConvs).forEach(roleId => {
+        storage.clearConversation(currentUser.id, roleId);
+      });
+      elements.chatMessages.innerHTML = '';
+      alert('所有对话记录已清空');
+      renderChatHistory();
+    }
+  }
+}
+
+// 删除单个角色的对话
+function deleteRoleConversation(roleId) {
+  const role = getRole(roleId);
+  const confirmMessage = `确定要删除与 ${t(`roles.${roleId}.name`, currentLang)} 的对话记录吗？`;
+  
+  try {
+    tg.showConfirm(confirmMessage, (confirmed) => {
+      if (confirmed) {
+        storage.clearConversation(currentUser.id, roleId);
+        tg.showAlert('已删除');
+        renderChatHistory();
+      }
+    });
+  } catch (e) {
+    if (confirm(confirmMessage)) {
+      storage.clearConversation(currentUser.id, roleId);
+      alert('已删除');
+      renderChatHistory();
+    }
+  }
 }
 
 // 添加欢迎消息
