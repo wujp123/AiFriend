@@ -3,14 +3,13 @@
 
 export class PaymentVerifier {
   constructor() {
-    // Nile 测试网 API
-    this.apiUrl = 'https://nile.trongrid.io';
-    // 主网 API: 'https://api.trongrid.io'
+    // 主网 API (正式网络)
+    this.apiUrl = 'https://api.trongrid.io';
+    // 测试网 API: 'https://nile.trongrid.io'
     
     this.walletAddress = 'TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m';
-    this.usdtContract = 'TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf'; // Nile 测试网实际 USDT 合约
-    // 备用合约: 'TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj'
-    // 主网合约: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+    this.usdtContract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'; // 主网 USDT 合约
+    // Nile 测试网合约: 'TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf'
   }
   
   // 检查是否有新的支付交易

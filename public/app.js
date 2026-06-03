@@ -727,31 +727,31 @@ window.payWithTON = function(planId, tonAmount, duration) {
 window.payWithTRON = function(planId, usdtAmount, duration) {
   console.log(`🔺 Initiating TRON payment: ${planId}, ${usdtAmount} USDT, ${duration} days`);
   
-  // Nile 测试网络钱包地址
+  // 主网钱包地址
   const tronAddress = 'TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m';
-  const network = 'Nile Testnet';
+  const network = 'TRON Mainnet';
   
-  // USDT TRC20 合约地址 (Nile 测试网)
-  const usdtContract = 'TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj';
+  // USDT TRC20 合约地址 (主网)
+  const usdtContract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
   
   const messages = {
     zh: {
       title: `TRON 支付 (${network})`,
-      paymentInfo: `💰 支付信息\n\n金额：${usdtAmount} USDT\n网络：Nile 测试网\n\n📋 收款地址：\n${tronAddress}\n\n📝 备注：AiFriend_${planId}_${currentUser.id}`,
+      paymentInfo: `💰 支付信息\n\n金额：${usdtAmount} USDT\n网络：TRON 主网\n\n📋 收款地址：\n${tronAddress}\n\n📝 备注：AiFriend_${planId}_${currentUser.id}`,
       copyAndOpen: '复制地址并打开钱包',
       copyOnly: '仅复制地址',
       cancel: '取消',
       addressCopied: '✅ 地址已复制！\n\n请在钱包中粘贴地址并完成转账',
-      instructions: '📱 支付步骤：\n\n1️⃣ 地址已复制到剪贴板\n2️⃣ 打开 TronLink 或 imToken\n3️⃣ 粘贴地址并输入金额\n4️⃣ 确认转账\n\n⚠️ 请确保：\n- 网络选择 Nile Testnet\n- 代币选择 USDT (TRC20)\n- 金额输入 ' + usdtAmount + ' USDT'
+      instructions: '📱 支付步骤：\n\n1️⃣ 地址已复制到剪贴板\n2️⃣ 打开 TronLink 或 imToken\n3️⃣ 粘贴地址并输入金额\n4️⃣ 确认转账\n\n⚠️ 请确保：\n- 网络选择 TRON Mainnet (主网)\n- 代币选择 USDT (TRC20)\n- 金额输入 ' + usdtAmount + ' USDT'
     },
     en: {
       title: `TRON Payment (${network})`,
-      paymentInfo: `💰 Payment Info\n\nAmount: ${usdtAmount} USDT\nNetwork: Nile Testnet\n\n📋 Recipient:\n${tronAddress}\n\n📝 Memo: AiFriend_${planId}_${currentUser.id}`,
+      paymentInfo: `💰 Payment Info\n\nAmount: ${usdtAmount} USDT\nNetwork: TRON Mainnet\n\n📋 Recipient:\n${tronAddress}\n\n📝 Memo: AiFriend_${planId}_${currentUser.id}`,
       copyAndOpen: 'Copy & Open Wallet',
       copyOnly: 'Copy Address Only',
       cancel: 'Cancel',
       addressCopied: '✅ Address copied!\n\nPlease paste in your wallet and complete the transfer',
-      instructions: '📱 Payment Steps:\n\n1️⃣ Address copied to clipboard\n2️⃣ Open TronLink or imToken\n3️⃣ Paste address and enter amount\n4️⃣ Confirm transfer\n\n⚠️ Make sure:\n- Network: Nile Testnet\n- Token: USDT (TRC20)\n- Amount: ' + usdtAmount + ' USDT'
+      instructions: '📱 Payment Steps:\n\n1️⃣ Address copied to clipboard\n2️⃣ Open TronLink or imToken\n3️⃣ Paste address and enter amount\n4️⃣ Confirm transfer\n\n⚠️ Make sure:\n- Network: TRON Mainnet\n- Token: USDT (TRC20)\n- Amount: ' + usdtAmount + ' USDT'
     }
   };
   
@@ -864,8 +864,8 @@ async function verifyPaymentForUser(planId, amount, duration) {
     } else {
       // 未找到支付
       const notFoundMsg = currentLang === 'zh'
-        ? '❌ 未找到支付记录\n\n请确保：\n✓ 已完成转账\n✓ 交易已确认（约3-5秒）\n✓ 金额正确\n✓ 网络选择 Nile Testnet\n\n如果刚刚支付，请等待几秒后重试'
-        : '❌ Payment not found\n\nPlease ensure:\n✓ Transfer completed\n✓ Transaction confirmed (~3-5s)\n✓ Correct amount\n✓ Network: Nile Testnet\n\nIf just paid, wait a few seconds and retry';
+        ? '❌ 未找到支付记录\n\n请确保：\n✓ 已完成转账\n✓ 交易已确认（约3-5秒）\n✓ 金额正确\n✓ 网络选择 TRON Mainnet (主网)\n\n如果刚刚支付，请等待几秒后重试'
+        : '❌ Payment not found\n\nPlease ensure:\n✓ Transfer completed\n✓ Transaction confirmed (~3-5s)\n✓ Correct amount\n✓ Network: TRON Mainnet\n\nIf just paid, wait a few seconds and retry';
       
       try {
         tg.showAlert(notFoundMsg);
