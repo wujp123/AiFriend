@@ -1,24 +1,11 @@
 // 配置文件 - 在这里设置你的 AI API
 export const config = {
-  // AI API 配置（示例：OpenAI 兼容接口）
+  // AI API 配置（使用 DeepSeek）
   ai: {
-    // 方案 1：OpenAI
-    provider: 'openai',
-    apiKey: 'YOUR_API_KEY_HERE', // 或者从用户设置中获取
-    apiUrl: 'https://api.openai.com/v1/chat/completions',
-    model: 'gpt-3.5-turbo',
-    
-    // 方案 2：DeepSeek（更便宜）
-    // provider: 'deepseek',
-    // apiKey: 'YOUR_DEEPSEEK_API_KEY',
-    // apiUrl: 'https://api.deepseek.com/v1/chat/completions',
-    // model: 'deepseek-chat',
-    
-    // 方案 3：其他兼容 OpenAI 格式的 API
-    // provider: 'custom',
-    // apiKey: 'YOUR_API_KEY',
-    // apiUrl: 'https://your-api-endpoint.com/v1/chat/completions',
-    // model: 'your-model',
+    provider: 'deepseek',
+    apiKey: 'sk-283ebd6e5dfd47aebe815125e984c2a1',
+    apiUrl: 'https://api.deepseek.com/v1/chat/completions',
+    model: 'deepseek-chat',
   },
   
   // 会员价格（Telegram Stars）
