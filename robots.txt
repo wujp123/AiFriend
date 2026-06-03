@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wujp123.github.io/AiFriend/sitemap.xml
