@@ -4,6 +4,7 @@ import { roles, getRolesByCategory, getRole, isRoleFree } from './roles.js';
 import { storage } from './storage.js';
 import { aiService } from './ai.js';
 import { config } from './config.js';
+import { imageService } from './image.js';
 
 // Telegram Web App
 const tg = window.Telegram.WebApp;
@@ -51,7 +52,7 @@ const elements = {
 };
 
 // 初始化
-async function init() {
+function init() {
   const user = tg.initDataUnsafe.user;
   const userId = user?.id || 'demo_user';
   
@@ -130,6 +131,158 @@ function updateUI() {
   elements.messageInput.placeholder = t('typingPlaceholder', currentLang);
 }
 
+// 渲染角色广场
+function renderRoleSquare() {
+  const categorized = getRolesByCategory(currentLang);
+  elements.roleCategories.innerHTML = '';
+  
+  Object.entries(categorized).forEach(([category, roleList]) => {
+    if (roleList.length === 0) return;
+    
+    const categoryDiv = document.createElement('div');
+    categoryDiv.className = 'role-category';
+    
+    const categoryTitle = document.createElement('h3');
+    categoryTitle.textContent = t(`categories.${category}`, currentLang);
+    categoryDiv.appendChild(categoryTitle);
+    
+    const rolesGrid = document.createElement('div');
+    rolesGrid.className = 'roles-grid';
+    
+    roleList.forEach(role => {
+      const roleCard = document.createElement('div');
+      roleCard.className = 'role-card';
+      if (!role.free && !storage.isPremium(currentUser.id)) {
+        roleCard.classList.add('locked');
+      }
+      if (currentUser.currentRole === role.id) {
+        roleCard.classList.add('selected');
+      }
+      
+      // 角色图片
+      const roleImg = document.createElement('img');
+      roleImg.src = role.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(role.emoji)}&size=200`;
+      roleImg.alt = role.name || role.emoji;
+      roleImg.className = 'role-avatar';
+      
+      const roleEmoji = document.createElement('div');
+      roleEmoji.className = 'role-emoji';
+      roleEmoji.textContent = role.emoji;
+      
+      const roleName = document.createElement('div');
+      roleName.className = 'role-name';
+      roleName.textContent = t(`roles.${role.id}.name`, currentLang);
+      
+      const roleDesc = document.createElement('div');
+      roleDesc.className = 'role-desc';
+      roleDesc.textContent = t(`roles.${role.id}.desc`, currentLang);
+      
+      roleCard.appendChild(roleImg);
+      roleCard.appendChild(roleEmoji);
+      roleCard.appendChild(roleName);
+      roleCard.appendChild(roleDesc);
+      
+      if (!role.free && !storage.isPremium(currentUser.id)) {
+        const lockIcon = document.createElement('div');
+        lockIcon.className = 'lock-icon';
+        lockIcon.textContent = '🔒';
+        roleCard.appendChild(lockIcon);
+      }
+      
+      roleCard.addEventListener('click', () => selectRole(role.id));
+      
+      rolesGrid.appendChild(roleCard);
+    });
+    
+    categoryDiv.appendChild(rolesGrid);
+    elements.roleCategories.appendChild(categoryDiv);
+  });
+}
+
+// 选择角色
+function selectRole(roleId) {
+  const role = getRole(roleId);
+  
+  if (!role.free && !storage.isPremium(currentUser.id)) {
+    tg.showPopup({
+      title: t('upgradeMembership', currentLang),
+      message: '此角色需要会员才能使用',
+      buttons: [
+        { id: 'upgrade', type: 'default', text: t('becomeMember', currentLang) },
+        { id: 'cancel', type: 'cancel' }
+      ]
+    }, (buttonId) => {
+      if (buttonId === 'upgrade') {
+        showView('membership');
+      }
+    });
+    return;
+  }
+  
+  currentUser.currentRole = roleId;
+  storage.updateUser(currentUser.id, currentUser);
+  updateUI();
+  showView('main');
+  loadConversation();
+  
+  tg.HapticFeedback.notificationOccurred('success');
+}
+
+// 渲染会员页面
+function renderMembership() {
+  // 状态
+  const isPremium = storage.isPremium(currentUser.id);
+  elements.membershipStatusContent.innerHTML = isPremium
+    ? '<p class="premium-badge">✨ 您是会员</p>'
+    : '<p>免费用户</p>';
+  
+  // 会员计划
+  elements.membershipPlans.innerHTML = `
+    <div class="plan-card">
+      <h3>月度会员</h3>
+      <p class="price">100 Stars</p>
+      <ul>
+        <li>✓ 无限对话</li>
+        <li>✓ 无限图片</li>
+        <li>✓ 全部角色</li>
+      </ul>
+      <button onclick="alert('使用 Telegram Stars 支付')">购买</button>
+    </div>
+  `;
+}
+
+// 渲染设置
+function renderSettings() {
+  elements.languageSelect.value = currentLang;
+  elements.apiKeyInput.value = currentUser.apiKey || '';
+}
+
+// 切换语言
+function changeLanguage() {
+  currentLang = elements.languageSelect.value;
+  storage.updateUser(currentUser.id, { language: currentLang });
+  updateUI();
+  tg.showAlert('语言已切换');
+}
+
+// 保存API Key
+function saveApiKey() {
+  const apiKey = elements.apiKeyInput.value.trim();
+  storage.updateUser(currentUser.id, { apiKey });
+}
+
+// 清空历史
+function clearHistory() {
+  tg.showConfirm('确定清空所有对话记录吗？', (confirmed) => {
+    if (confirmed) {
+      storage.clearConversation(currentUser.id, currentUser.currentRole);
+      elements.chatMessages.innerHTML = '';
+      addWelcomeMessage();
+      tg.showAlert('已清空');
+    }
+  });
+}
+
 // 添加欢迎消息
 function addWelcomeMessage() {
   if (elements.chatMessages.children.length === 0) {
@@ -172,22 +325,27 @@ async function sendMessage() {
   elements.sendButton.disabled = true;
   
   try {
-    const reply = await aiService.generateResponse(
+    const result = await aiService.generateResponse(
       currentUser.id,
       currentUser.currentRole,
       message
     );
     
-    addMessage(reply, false);
+    addMessage(result.text, false);
+    
+    // 如果有图片
+    if (result.image) {
+      addImageMessage(result.image.url);
+    }
     
     storage.addMessage(currentUser.id, currentUser.currentRole, {
       role: 'assistant',
-      content: reply
+      content: result.text
     });
     
   } catch (error) {
     console.error('AI Error:', error);
-    tg.showAlert(error.message || t('networkError', currentLang));
+    addMessage('抱歉，出现错误了: ' + error.message, false);
   } finally {
     elements.sendButton.disabled = false;
   }
@@ -220,13 +378,35 @@ function addMessage(content, isUser) {
   }
 }
 
+// 添加图片消息
+function addImageMessage(imageUrl) {
+  const imageDiv = document.createElement('div');
+  imageDiv.className = 'message bot-message image-message';
+  
+  const img = document.createElement('img');
+  img.src = imageUrl;
+  img.alt = 'AI Generated Image';
+  img.className = 'message-image';
+  img.loading = 'lazy';
+  
+  imageDiv.appendChild(img);
+  elements.chatMessages.appendChild(imageDiv);
+  
+  elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+}
+
 // 加载对话历史
 function loadConversation() {
+  elements.chatMessages.innerHTML = '';
   const history = storage.getConversationHistory(currentUser.id, currentUser.currentRole, 20);
   
   history.forEach(msg => {
     addMessage(msg.content, msg.role === 'user');
   });
+  
+  if (history.length === 0) {
+    addWelcomeMessage();
+  }
 }
 
 // 页面加载完成
