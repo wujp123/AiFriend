@@ -105,17 +105,71 @@ ${finalSystemPrompt}${imageResult?.success ? '\n\nWhen you send photos, naturall
     console.log('📝 Final system prompt:', systemPrompt);
     console.log('📝 Final user message:', userMessageFinal);
     
-    // 构建消息列表
+    // 构建消息列表 - 添加示例对话强制语言模式
     const messages = [
       {
         role: 'system',
         content: systemPrompt
-      },
-      {
-        role: 'user',
-        content: userMessageFinal
       }
     ];
+    
+    // 为非中文语言添加示例对话（Few-shot learning）
+    if (responseLanguage === 'en') {
+      messages.push(
+        { role: 'user', content: 'Hi there!' },
+        { role: 'assistant', content: 'Hey! How are you doing today? 😊' },
+        { role: 'user', content: 'Tell me about yourself' },
+        { role: 'assistant', content: 'I\'m your close friend who\'s always here for you! I love chatting with you and hearing about your day. What would you like to talk about? 💕' }
+      );
+    } else if (responseLanguage === 'ja') {
+      messages.push(
+        { role: 'user', content: 'こんにちは' },
+        { role: 'assistant', content: 'こんにちは！元気ですか？😊' },
+        { role: 'user', content: '自己紹介して' },
+        { role: 'assistant', content: 'あなたの大切な友達だよ！いつもあなたのことを考えているの。今日は何を話したい？💕' }
+      );
+    } else if (responseLanguage === 'es') {
+      messages.push(
+        { role: 'user', content: 'Hola' },
+        { role: 'assistant', content: '¡Hola! ¿Cómo estás hoy? 😊' }
+      );
+    } else if (responseLanguage === 'fr') {
+      messages.push(
+        { role: 'user', content: 'Bonjour' },
+        { role: 'assistant', content: 'Bonjour! Comment vas-tu aujourd\'hui? 😊' }
+      );
+    } else if (responseLanguage === 'de') {
+      messages.push(
+        { role: 'user', content: 'Hallo' },
+        { role: 'assistant', content: 'Hallo! Wie geht es dir heute? 😊' }
+      );
+    } else if (responseLanguage === 'ko') {
+      messages.push(
+        { role: 'user', content: '안녕' },
+        { role: 'assistant', content: '안녕! 오늘 어때? 😊' }
+      );
+    } else if (responseLanguage === 'pt') {
+      messages.push(
+        { role: 'user', content: 'Olá' },
+        { role: 'assistant', content: 'Olá! Como você está hoje? 😊' }
+      );
+    } else if (responseLanguage === 'ru') {
+      messages.push(
+        { role: 'user', content: 'Привет' },
+        { role: 'assistant', content: 'Привет! Как дела сегодня? 😊' }
+      );
+    } else if (responseLanguage === 'ar') {
+      messages.push(
+        { role: 'user', content: 'مرحبا' },
+        { role: 'assistant', content: 'مرحبا! كيف حالك اليوم؟ 😊' }
+      );
+    }
+    
+    // 添加实际的用户消息
+    messages.push({
+      role: 'user',
+      content: userMessageFinal
+    });
     
     // 获取用户自定义 API Key（如果有）
     const user = storage.getUser(userId);
