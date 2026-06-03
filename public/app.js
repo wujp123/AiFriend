@@ -432,22 +432,329 @@ function renderMembership() {
   // 状态
   const isPremium = storage.isPremium(currentUser.id);
   elements.membershipStatusContent.innerHTML = isPremium
-    ? '<p class="premium-badge">✨ 您是会员</p>'
-    : '<p>免费用户</p>';
+    ? `<p class="premium-badge">✨ ${t('premiumMember', currentLang) || '您是会员'}</p>`
+    : `<p>${t('freeUser', currentLang) || '免费用户'}</p>`;
   
-  // 会员计划
-  elements.membershipPlans.innerHTML = `
-    <div class="plan-card">
-      <h3>月度会员</h3>
-      <p class="price">100 Stars</p>
-      <ul>
-        <li>✓ 无限对话</li>
-        <li>✓ 无限图片</li>
-        <li>✓ 全部角色</li>
+  // 会员套餐
+  const plans = [
+    {
+      id: 'weekly',
+      name: '周会员',
+      nameEn: 'Weekly',
+      price: '$1.99',
+      stars: 50,
+      ton: '1',
+      usdt: '2',
+      duration: 7,
+      features: ['unlimitedChats', 'unlimitedImages', 'allCharacters']
+    },
+    {
+      id: 'monthly',
+      name: '月会员',
+      nameEn: 'Monthly',
+      price: '$4.99',
+      stars: 100,
+      ton: '3',
+      usdt: '5',
+      duration: 30,
+      popular: true,
+      features: ['unlimitedChats', 'unlimitedImages', 'allCharacters', 'prioritySupport']
+    },
+    {
+      id: 'quarterly',
+      name: '季度会员',
+      nameEn: 'Quarterly',
+      price: '$12.99',
+      stars: 260,
+      ton: '8',
+      usdt: '13',
+      duration: 90,
+      discount: '13%',
+      features: ['unlimitedChats', 'unlimitedImages', 'allCharacters', 'prioritySupport']
+    },
+    {
+      id: 'yearly',
+      name: '年会员',
+      nameEn: 'Yearly',
+      price: '$39.99',
+      stars: 800,
+      ton: '24',
+      usdt: '40',
+      duration: 365,
+      discount: '33%',
+      features: ['unlimitedChats', 'unlimitedImages', 'allCharacters', 'prioritySupport', 'exclusiveRoles']
+    }
+  ];
+  
+  const plansHTML = plans.map(plan => `
+    <div class="plan-card ${plan.popular ? 'popular-plan' : ''}">
+      ${plan.popular ? `<div class="popular-badge">${currentLang === 'zh' ? '最受欢迎' : 'Most Popular'}</div>` : ''}
+      ${plan.discount ? `<div class="discount-badge">-${plan.discount}</div>` : ''}
+      
+      <h3>${currentLang === 'zh' ? plan.name : plan.nameEn}</h3>
+      <p class="price">${plan.price} <span class="period">/ ${plan.duration} ${currentLang === 'zh' ? '天' : 'days'}</span></p>
+      
+      <ul class="features-list">
+        ${plan.features.map(feature => `
+          <li>✓ ${getFeatureText(feature)}</li>
+        `).join('')}
       </ul>
-      <button onclick="alert('使用 Telegram Stars 支付')">购买</button>
+      
+      <div class="payment-methods">
+        <h4>${currentLang === 'zh' ? '支付方式' : 'Payment Method'}</h4>
+        
+        <button class="payment-btn stars-btn" onclick="window.payWithStars('${plan.id}', ${plan.stars}, ${plan.duration})">
+          <span class="payment-icon">⭐</span>
+          <div class="payment-info">
+            <div class="payment-name">Telegram Stars</div>
+            <div class="payment-amount">${plan.stars} Stars</div>
+          </div>
+        </button>
+        
+        <button class="payment-btn ton-btn" onclick="window.payWithTON('${plan.id}', '${plan.ton}', ${plan.duration})">
+          <span class="payment-icon">💎</span>
+          <div class="payment-info">
+            <div class="payment-name">TON</div>
+            <div class="payment-amount">~${plan.ton} TON</div>
+          </div>
+        </button>
+        
+        <button class="payment-btn tron-btn" onclick="window.payWithTRON('${plan.id}', '${plan.usdt}', ${plan.duration})">
+          <span class="payment-icon">🔺</span>
+          <div class="payment-info">
+            <div class="payment-name">TRON (USDT-TRC20)</div>
+            <div class="payment-amount">${plan.usdt} USDT</div>
+          </div>
+        </button>
+      </div>
     </div>
-  `;
+  `).join('');
+  
+  elements.membershipPlans.innerHTML = plansHTML;
+}
+
+// 获取功能文本
+function getFeatureText(feature) {
+  const features = {
+    zh: {
+      unlimitedChats: '无限对话',
+      unlimitedImages: '无限图片生成',
+      allCharacters: '全部角色解锁',
+      prioritySupport: '优先客服支持',
+      exclusiveRoles: '独家限定角色'
+    },
+    en: {
+      unlimitedChats: 'Unlimited Chats',
+      unlimitedImages: 'Unlimited Images',
+      allCharacters: 'All Characters',
+      prioritySupport: 'Priority Support',
+      exclusiveRoles: 'Exclusive Characters'
+    }
+  };
+  
+  const lang = currentLang === 'zh' ? 'zh' : 'en';
+  return features[lang][feature] || feature;
+}
+
+// Telegram Stars 支付
+window.payWithStars = function(planId, stars, duration) {
+  console.log(`💫 Initiating Telegram Stars payment: ${planId}, ${stars} Stars, ${duration} days`);
+  
+  const messages = {
+    zh: {
+      title: 'Telegram Stars 支付',
+      desc: `您将支付 ${stars} Stars 购买 ${duration} 天会员`,
+      pay: '支付',
+      cancel: '取消',
+      notSupported: '您的 Telegram 版本不支持 Stars 支付',
+      contactSupport: '请联系客服完成支付'
+    },
+    en: {
+      title: 'Telegram Stars Payment',
+      desc: `You will pay ${stars} Stars for ${duration} days membership`,
+      pay: 'Pay',
+      cancel: 'Cancel',
+      notSupported: 'Your Telegram version does not support Stars payment',
+      contactSupport: 'Please contact support to complete payment'
+    }
+  };
+  
+  const msg = currentLang === 'zh' ? messages.zh : messages.en;
+  
+  try {
+    tg.showPopup({
+      title: msg.title,
+      message: msg.desc,
+      buttons: [
+        { id: 'pay', type: 'default', text: msg.pay + ` ${stars} Stars` },
+        { id: 'cancel', type: 'cancel', text: msg.cancel }
+      ]
+    }, (buttonId) => {
+      if (buttonId === 'pay') {
+        if (window.Telegram?.WebApp?.openInvoice) {
+          const invoiceLink = 'YOUR_TELEGRAM_STARS_INVOICE_LINK';
+          tg.openInvoice(invoiceLink, (status) => {
+            if (status === 'paid') {
+              activatePremium(duration);
+            }
+          });
+        } else {
+          tg.showAlert(msg.notSupported);
+        }
+      }
+    });
+  } catch (e) {
+    alert(`Telegram Stars: ${stars} Stars\n\n${msg.contactSupport}`);
+  }
+};
+
+// TON 支付
+window.payWithTON = function(planId, tonAmount, duration) {
+  console.log(`💎 Initiating TON payment: ${planId}, ${tonAmount} TON, ${duration} days`);
+  
+  const tonAddress = 'YOUR_TON_WALLET_ADDRESS';
+  
+  const messages = {
+    zh: {
+      title: 'TON 支付',
+      desc: `请向以下地址转账 ${tonAmount} TON`,
+      address: '地址',
+      amount: '金额',
+      copy: '复制地址',
+      open: '打开钱包',
+      cancel: '取消',
+      copied: '地址已复制到剪贴板',
+      note: '转账备注',
+      noteText: `AiFriend_${planId}_${currentUser.id}`
+    },
+    en: {
+      title: 'TON Payment',
+      desc: `Please transfer ${tonAmount} TON to the address below`,
+      address: 'Address',
+      amount: 'Amount',
+      copy: 'Copy Address',
+      open: 'Open Wallet',
+      cancel: 'Cancel',
+      copied: 'Address copied to clipboard',
+      note: 'Memo',
+      noteText: `AiFriend_${planId}_${currentUser.id}`
+    }
+  };
+  
+  const msg = currentLang === 'zh' ? messages.zh : messages.en;
+  
+  try {
+    tg.showPopup({
+      title: msg.title,
+      message: `${msg.desc}\n\n${msg.address}:\n${tonAddress}\n\n${msg.amount}: ${tonAmount} TON\n\n${msg.note}: ${msg.noteText}`,
+      buttons: [
+        { id: 'copy', type: 'default', text: msg.copy },
+        { id: 'open', type: 'default', text: msg.open },
+        { id: 'cancel', type: 'cancel', text: msg.cancel }
+      ]
+    }, (buttonId) => {
+      if (buttonId === 'copy') {
+        copyToClipboard(tonAddress);
+        tg.showAlert(msg.copied);
+      } else if (buttonId === 'open') {
+        const tonUrl = `ton://transfer/${tonAddress}?amount=${tonAmount}000000000&text=${msg.noteText}`;
+        window.open(tonUrl, '_blank');
+      }
+    });
+  } catch (e) {
+    alert(`TON Payment\n\nAddress: ${tonAddress}\nAmount: ${tonAmount} TON\nMemo: ${msg.noteText}`);
+  }
+};
+
+// TRON (USDT-TRC20) 支付
+window.payWithTRON = function(planId, usdtAmount, duration) {
+  console.log(`🔺 Initiating TRON payment: ${planId}, ${usdtAmount} USDT, ${duration} days`);
+  
+  const tronAddress = 'YOUR_TRON_WALLET_ADDRESS';
+  
+  const messages = {
+    zh: {
+      title: 'TRON 支付 (USDT-TRC20)',
+      desc: `请向以下地址转账 ${usdtAmount} USDT (TRC20网络)`,
+      address: '地址',
+      amount: '金额',
+      copy: '复制地址',
+      done: '已完成支付',
+      cancel: '取消',
+      copied: '地址已复制到剪贴板',
+      verifying: '正在验证您的支付，请稍候...',
+      note: '转账备注',
+      noteText: `AiFriend_${planId}_${currentUser.id}`
+    },
+    en: {
+      title: 'TRON Payment (USDT-TRC20)',
+      desc: `Please transfer ${usdtAmount} USDT (TRC20 network) to the address below`,
+      address: 'Address',
+      amount: 'Amount',
+      copy: 'Copy Address',
+      done: 'Payment Completed',
+      cancel: 'Cancel',
+      copied: 'Address copied to clipboard',
+      verifying: 'Verifying your payment, please wait...',
+      note: 'Memo',
+      noteText: `AiFriend_${planId}_${currentUser.id}`
+    }
+  };
+  
+  const msg = currentLang === 'zh' ? messages.zh : messages.en;
+  
+  try {
+    tg.showPopup({
+      title: msg.title,
+      message: `${msg.desc}\n\n${msg.address}:\n${tronAddress}\n\n${msg.amount}: ${usdtAmount} USDT (TRC20)\n\n${msg.note}: ${msg.noteText}`,
+      buttons: [
+        { id: 'copy', type: 'default', text: msg.copy },
+        { id: 'done', type: 'default', text: msg.done },
+        { id: 'cancel', type: 'cancel', text: msg.cancel }
+      ]
+    }, (buttonId) => {
+      if (buttonId === 'copy') {
+        copyToClipboard(tronAddress);
+        tg.showAlert(msg.copied);
+      } else if (buttonId === 'done') {
+        tg.showAlert(msg.verifying);
+        // 这里需要后端验证支付
+      }
+    });
+  } catch (e) {
+    alert(`TRON Payment (USDT-TRC20)\n\nAddress: ${tronAddress}\nAmount: ${usdtAmount} USDT\nMemo: ${msg.noteText}`);
+  }
+};
+
+// 激活会员
+function activatePremium(days) {
+  currentUser.membership = {
+    type: 'premium',
+    expireAt: Date.now() + days * 24 * 60 * 60 * 1000
+  };
+  storage.updateUser(currentUser.id, currentUser);
+  
+  const successMsg = currentLang === 'zh' 
+    ? `🎉 恭喜！会员已激活，有效期 ${days} 天` 
+    : `🎉 Congratulations! Premium activated for ${days} days`;
+    
+  tg.showAlert(successMsg);
+  renderMembership();
+  updateUI();
+}
+
+// 复制到剪贴板
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text);
+  } else {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+  }
 }
 
 // 渲染设置

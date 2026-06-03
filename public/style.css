@@ -448,7 +448,8 @@ main {
 .membership-plans {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
+  padding: 10px 0;
 }
 
 .plan-card {
@@ -456,6 +457,37 @@ main {
   border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
   padding: 20px;
   border-radius: 15px;
+  position: relative;
+}
+
+.popular-plan {
+  border-color: var(--tg-theme-button-color, #667eea);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 16px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.discount-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #ff4444;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.85em;
+  font-weight: bold;
 }
 
 .plan-card h3 {
@@ -471,33 +503,110 @@ main {
   margin: 10px 0;
 }
 
-.plan-card ul {
+.plan-card .price .period {
+  font-size: 0.5em;
+  color: var(--tg-theme-hint-color, #999);
+  font-weight: normal;
+}
+
+.features-list {
   list-style: none;
   padding: 0;
-  margin: 15px 0;
+  margin: 20px 0;
 }
 
-.plan-card li {
-  padding: 8px 0;
+.features-list li {
+  padding: 10px 0;
   color: var(--tg-theme-text-color, #333);
   font-size: 0.95em;
+  border-bottom: 1px solid var(--tg-theme-hint-color, #f0f0f0);
 }
 
-.plan-card button {
+.features-list li:last-child {
+  border-bottom: none;
+}
+
+.payment-methods {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px dashed var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.payment-methods h4 {
+  font-size: 1em;
+  margin-bottom: 15px;
+  color: var(--tg-theme-text-color, #666);
+}
+
+.payment-btn {
   width: 100%;
-  padding: 14px;
-  background: var(--tg-theme-button-color, #667eea);
-  color: var(--tg-theme-button-text-color, white);
-  border: none;
-  border-radius: 10px;
-  font-size: 1.1em;
-  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  margin-bottom: 12px;
+  background: var(--tg-theme-bg-color, white);
+  border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+  border-radius: 12px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.3s;
 }
 
-.plan-card button:active {
-  opacity: 0.8;
+.payment-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.payment-btn:active {
+  transform: translateY(0);
+}
+
+.payment-btn .payment-icon {
+  font-size: 2em;
+  flex-shrink: 0;
+}
+
+.payment-btn .payment-info {
+  flex: 1;
+  text-align: left;
+}
+
+.payment-btn .payment-name {
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #333);
+  margin-bottom: 4px;
+}
+
+.payment-btn .payment-amount {
+  font-size: 0.9em;
+  color: var(--tg-theme-hint-color, #666);
+}
+
+.stars-btn {
+  border-color: #ffc107;
+}
+
+.stars-btn:hover {
+  background: rgba(255, 193, 7, 0.05);
+  border-color: #ffc107;
+}
+
+.ton-btn {
+  border-color: #0088cc;
+}
+
+.ton-btn:hover {
+  background: rgba(0, 136, 204, 0.05);
+  border-color: #0088cc;
+}
+
+.tron-btn {
+  border-color: #ff0013;
+}
+
+.tron-btn:hover {
+  background: rgba(255, 0, 19, 0.05);
+  border-color: #ff0013;
 }
 
 /* 设置页面样式 */
