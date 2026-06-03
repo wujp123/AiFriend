@@ -7,7 +7,7 @@ export class PaymentVerifier {
     this.apiUrl = 'https://api.trongrid.io';
     // 测试网 API: 'https://nile.trongrid.io'
     
-    this.walletAddress = 'TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m';
+    this.walletAddress = 'TMiBnPCeFcv1A2UNKV636f5NAMvuJKQVhm';
     this.usdtContract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'; // 主网 USDT 合约
     // Nile 测试网合约: 'TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf'
   }

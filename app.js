@@ -728,8 +728,8 @@ window.payWithTON = function(planId, tonAmount, duration) {
 window.payWithTRON = function(planId, usdtAmount, duration) {
   console.log(`🔺 Initiating TRON payment: ${planId}, ${usdtAmount} USDT, ${duration} days`);
   
-  // Nile 测试网络钱包地址
-  const tronAddress = 'TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m';
+  // 主网钱包地址
+  const tronAddress = 'TMiBnPCeFcv1A2UNKV636f5NAMvuJKQVhm';
   const network = 'TRON Mainnet'; // 主网
   
   // USDT TRC20 合约地址 (Nile 测试网)
