@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>AiFriend</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2024121001">
 </head>
 <body>
   <div class="container">
@@ -59,6 +62,11 @@
       </div>
       <div class="history-content">
         <div id="historyList" class="history-list"></div>
+        <!-- 测试用重置按钮 -->
+        <div style="text-align: center; padding: 20px; border-top: 1px solid #eee; margin-top: 20px;">
+          <p style="color: #999; font-size: 12px; margin-bottom: 10px;">🧪 For Testing Only</p>
+          <button id="quickResetBtn" class="danger-btn" style="font-size: 14px;">🔄 Reset Account (清除数据)</button>
+        </div>
       </div>
     </div>
 
@@ -123,6 +131,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=2024121001"></script>
 </body>
 </html>

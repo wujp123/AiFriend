@@ -64,6 +64,7 @@ const elements = {
   chatHistoryTitle: document.getElementById('chatHistoryTitle'),
   newChatBtn: document.getElementById('newChatBtn'),
   historyList: document.getElementById('historyList'),
+  quickResetBtn: document.getElementById('quickResetBtn'),
   
   // Role square view
   roleSquareView: document.getElementById('roleSquareView'),
@@ -270,6 +271,11 @@ function setupEventListeners() {
   elements.apiKeyInput.addEventListener('blur', saveApiKey);
   elements.clearHistoryBtn.addEventListener('click', clearHistory);
   elements.resetAccountBtn.addEventListener('click', resetAccount);
+  
+  // 快速重置按钮（在聊天历史页面）
+  if (elements.quickResetBtn) {
+    elements.quickResetBtn.addEventListener('click', resetAccount);
+  }
 }
 
 // 切换视图
