@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram 日志配置助手</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+    
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    
+    .step {
+      background: #f9fafb;
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border-left: 4px solid #667eea;
+    }
+    
+    .step-number {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background: #667eea;
+      color: white;
+      text-align: center;
+      line-height: 32px;
+      border-radius: 50%;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    
+    .step-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    
+    .step-content {
+      color: #555;
+      line-height: 1.8;
+    }
+    
+    .input-group {
+      margin: 20px 0;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Courier New', monospace;
+      transition: all 0.3s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-right: 10px;
+    }
+    
+    button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    button.secondary {
+      background: #e5e7eb;
+      color: #333;
+    }
+    
+    button.secondary:hover {
+      background: #d1d5db;
+    }
+    
+    .code-output {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 20px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 20px 0;
+      white-space: pre-wrap;
+    }
+    
+    .success {
+      background: #dcfce7;
+      border-left: 4px solid #22c55e;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      color: #166534;
+    }
+    
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      color: #856404;
+    }
+    
+    .link {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .link:hover {
+      text-decoration: underline;
+    }
+    
+    .test-result {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    
+    .test-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+    
+    .test-error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Telegram 日志配置助手</h1>
+    <p class="subtitle">3步配置，让你的 Telegram 实时接收所有用户数据</p>
+    
+    <!-- 步骤1 -->
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">1</span>
+        创建 Telegram Bot
+      </div>
+      <div class="step-content">
+        <ol style="padding-left: 20px;">
+          <li>在 Telegram 搜索 <strong>@BotFather</strong></li>
+          <li>发送命令：<code>/newbot</code></li>
+          <li>输入 Bot 名称（如：<code>iFriendly Logger</code>）</li>
+          <li>输入 Bot 用户名（如：<code>ifriendly_logger_bot</code>）</li>
+          <li>复制获得的 <strong>Bot Token</strong></li>
+        </ol>
+        
+        <div class="input-group">
+          <label>📝 粘贴你的 Bot Token：</label>
+          <input 
+            type="text" 
+            id="botToken" 
+            placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+          >
+        </div>
+      </div>
+    </div>
+    
+    <!-- 步骤2 -->
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">2</span>
+        获取你的 Chat ID
+      </div>
+      <div class="step-content">
+        <p><strong>方法1（推荐）：</strong></p>
+        <ol style="padding-left: 20px; margin-bottom: 15px;">
+          <li>在 Telegram 搜索 <strong>@userinfobot</strong></li>
+          <li>点击 <code>START</code></li>
+          <li>复制显示的 <strong>User ID</strong></li>
+        </ol>
+        
+        <p><strong>方法2（使用频道）：</strong></p>
+        <ol style="padding-left: 20px;">
+          <li>创建一个 Telegram 频道</li>
+          <li>将你的 Bot 添加为管理员</li>
+          <li>使用频道 ID（格式：<code>-1001234567890</code>）</li>
+        </ol>
+        
+        <div class="input-group">
+          <label>📱 粘贴你的 Chat ID：</label>
+          <input 
+            type="text" 
+            id="chatId" 
+            placeholder="123456789 或 -1001234567890"
+          >
+        </div>
+      </div>
+    </div>
+    
+    <!-- 步骤3 -->
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">3</span>
+        生成配置代码
+      </div>
+      <div class="step-content">
+        <button onclick="generateCode()">🎨 生成代码</button>
+        <button onclick="testConnection()" class="secondary">🧪 测试连接</button>
+        <button onclick="copyCode()" class="secondary">📋 复制代码</button>
+        
+        <div id="testResult"></div>
+        
+        <div id="codeOutput"></div>
+      </div>
+    </div>
+    
+    <!-- 说明 -->
+    <div class="warning">
+      <strong>⚠️ 安全提醒：</strong><br>
+      Bot Token 是敏感信息，不要分享给他人。<br>
+      如果 Token 泄露，请在 @BotFather 中使用 <code>/revoke</code> 命令撤销。
+    </div>
+    
+    <div class="success" style="display:none;" id="successMsg">
+      <strong>✅ 配置成功！</strong><br>
+      请将生成的代码复制到 <code>telegram-logger.js</code> 文件中。<br>
+      <a href="TELEGRAM_LOGGING_GUIDE.md" class="link" target="_blank">查看完整使用指南 →</a>
+    </div>
+  </div>
+
+  <script>
+    let generatedCode = '';
+    
+    function generateCode() {
+      const botToken = document.getElementById('botToken').value.trim();
+      const chatId = document.getElementById('chatId').value.trim();
+      
+      if (!botToken || !chatId) {
+        alert('❌ 请先填写 Bot Token 和 Chat ID');
+        return;
+      }
+      
+      // 验证格式
+      if (!botToken.includes(':')) {
+        alert('❌ Bot Token 格式不正确\n应该包含冒号，格式：1234567890:ABCdef...');
+        return;
+      }
+      
+      generatedCode = `class TelegramLogger {
+  constructor() {
+    // 🔑 你的 Bot Token
+    this.botToken = '${botToken}';
+    
+    // 📱 你的 Chat ID
+    this.adminChatId = '${chatId}';
+    
+    // API URL
+    this.apiUrl = \`https://api.telegram.org/bot\${this.botToken}\`;
+    
+    // 启用日志
+    this.enabled = true;
+    
+    console.log('✅ Telegram Logger configured');
+  }
+  
+  // ... 其他方法保持不变
+}`;
+      
+      document.getElementById('codeOutput').innerHTML = 
+        '<div class="code-output">' + escapeHtml(generatedCode) + '</div>';
+      
+      document.getElementById('successMsg').style.display = 'block';
+    }
+    
+    async function testConnection() {
+      const botToken = document.getElementById('botToken').value.trim();
+      const chatId = document.getElementById('chatId').value.trim();
+      const resultDiv = document.getElementById('testResult');
+      
+      if (!botToken || !chatId) {
+        alert('❌ 请先填写 Bot Token 和 Chat ID');
+        return;
+      }
+      
+      resultDiv.innerHTML = '<div class="test-result">🔄 测试中...</div>';
+      
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: '🧪 *测试消息*\n\nBot 配置成功！\n\n来自：iFriendly AI 配置助手',
+            parse_mode: 'Markdown'
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.ok) {
+          resultDiv.innerHTML = `
+            <div class="test-result test-success">
+              ✅ 测试成功！<br>
+              请检查你的 Telegram 是否收到测试消息。<br>
+              消息ID: ${result.result.message_id}
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div class="test-result test-error">
+              ❌ 测试失败<br>
+              错误: ${result.description}<br>
+              <br>
+              常见原因：<br>
+              • Bot Token 错误<br>
+              • Chat ID 错误<br>
+              • 没有先给 Bot 发送消息（私聊需要先点 START）
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="test-result test-error">
+            ❌ 网络错误<br>
+            ${error.message}
+          </div>
+        `;
+      }
+    }
+    
+    function copyCode() {
+      if (!generatedCode) {
+        alert('❌ 请先生成代码');
+        return;
+      }
+      
+      navigator.clipboard.writeText(generatedCode).then(() => {
+        alert('✅ 代码已复制到剪贴板！\n\n请粘贴到 telegram-logger.js 文件的 constructor 方法中。');
+      }).catch(err => {
+        alert('❌ 复制失败：' + err.message);
+      });
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

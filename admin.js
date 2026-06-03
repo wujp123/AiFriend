@@ -364,6 +364,10 @@ function renderUsers() {
         <td colspan="7" class="empty-state">
           <div class="empty-state-icon">👥</div>
           <p>暂无用户数据</p>
+          <p style="font-size: 0.9em; color: #999; margin-top: 10px;">
+            提示：用户数据需要在主应用中生成。<br>
+            访问 <a href="https://wujp123.github.io/AiFriend/" target="_blank">主应用</a> 并与AI角色聊天即可生成数据。
+          </p>
         </td>
       </tr>
     `;
@@ -374,14 +378,24 @@ function renderUsers() {
     const isPremium = isPremiumUser(user);
     const totalSpent = getUserTotalSpent(user.id);
     
+    // 获取到期时间
+    let expireDate = '-';
+    if (isPremium) {
+      if (user.premiumUntil) {
+        expireDate = formatDate(new Date(user.premiumUntil).getTime());
+      } else if (user.membership && user.membership.expireAt) {
+        expireDate = formatDate(new Date(user.membership.expireAt).getTime());
+      }
+    }
+    
     return `
       <tr data-user-id="${user.id}">
-        <td>${user.id}</td>
+        <td title="${user.id}">${user.id.substring(0, 12)}...</td>
         <td>${user.firstName || user.username || '-'}</td>
         <td><span class="status-badge status-${isPremium ? 'premium' : 'free'}">${isPremium ? '会员' : '免费'}</span></td>
-        <td>${user.createdAt ? formatDate(user.createdAt) : '-'}</td>
-        <td>$${totalSpent}</td>
-        <td>${isPremium && user.membership ? formatDate(user.membership.expireAt) : '-'}</td>
+        <td>${user.createdAt ? formatDate(new Date(user.createdAt).getTime()) : '-'}</td>
+        <td>$${totalSpent.toFixed(2)}</td>
+        <td>${expireDate}</td>
         <td>
           <button class="action-btn action-edit" onclick="window.editUser('${user.id}')">编辑</button>
         </td>
@@ -392,30 +406,40 @@ function renderUsers() {
 
 // 获取所有用户
 function getAllUsers() {
-  const users = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('user_')) {
-      try {
-        const user = JSON.parse(localStorage.getItem(key));
-        users.push(user);
-      } catch (e) {
-        console.error('Failed to parse user:', key, e);
-      }
-    }
+  try {
+    // 使用新的存储格式: ifriendly_users
+    const usersObj = JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+    // 转换为数组并确保每个用户都有id字段
+    return Object.entries(usersObj).map(([userId, userData]) => ({
+      ...userData,
+      id: userData.id || userId
+    }));
+  } catch (e) {
+    console.error('Failed to load users:', e);
+    return [];
   }
-  return users;
 }
 
 // 获取收款记录
 function getPayments() {
-  const paymentsData = localStorage.getItem('admin_payments');
-  return paymentsData ? JSON.parse(paymentsData) : [];
+  try {
+    // 使用新的存储key: ifriendly_payments
+    const paymentsData = localStorage.getItem('ifriendly_payments') || '[]';
+    return JSON.parse(paymentsData);
+  } catch (e) {
+    console.error('Failed to load payments:', e);
+    return [];
+  }
 }
 
 // 保存收款记录
 function savePayments(payments) {
-  localStorage.setItem('admin_payments', JSON.stringify(payments));
+  try {
+    // 使用新的存储key: ifriendly_payments
+    localStorage.setItem('ifriendly_payments', JSON.stringify(payments));
+  } catch (e) {
+    console.error('Failed to save payments:', e);
+  }
 }
 
 // 添加收款记录
@@ -482,16 +506,36 @@ function confirmAddPayment() {
 
 // 激活用户会员
 function activateUserPremium(userId, days) {
-  const user = storageHelper.getUser(userId);
-  const currentExpireAt = user.membership?.expireAt || Date.now();
-  const newExpireAt = Math.max(Date.now(), currentExpireAt) + days * 24 * 60 * 60 * 1000;
+  const users = storageHelper.getUsers();
+  const user = users[userId];
   
-  storageHelper.updateUser(userId, {
-    membership: {
-      type: 'premium',
-      expireAt: newExpireAt
-    }
-  });
+  if (!user) {
+    console.error('User not found:', userId);
+    return;
+  }
+  
+  // 计算新的到期时间
+  let currentExpireAt = Date.now();
+  if (user.isPremium && user.premiumUntil && new Date(user.premiumUntil) > new Date()) {
+    currentExpireAt = new Date(user.premiumUntil).getTime();
+  } else if (user.membership && user.membership.expireAt && new Date(user.membership.expireAt) > new Date()) {
+    currentExpireAt = new Date(user.membership.expireAt).getTime();
+  }
+  
+  const newExpireAt = Math.max(Date.now(), currentExpireAt) + days * 24 * 60 * 60 * 1000;
+  const newExpireDate = new Date(newExpireAt).toISOString();
+  
+  // 更新用户数据（同时支持两种格式）
+  user.isPremium = true;
+  user.premiumUntil = newExpireDate;
+  user.membership = {
+    type: 'premium',
+    expireAt: newExpireDate
+  };
+  
+  // 保存
+  localStorage.setItem('ifriendly_users', JSON.stringify(users));
+  console.log('✅ User premium activated:', userId, 'until', newExpireDate);
 }
 
 // 验证收款
@@ -686,7 +730,15 @@ function getUserTotalSpent(userId) {
 
 // 判断是否为会员
 function isPremiumUser(user) {
-  return user.membership && user.membership.expireAt > Date.now();
+  if (!user) return false;
+  // 支持两种格式
+  if (user.membership && user.membership.expireAt) {
+    return new Date(user.membership.expireAt) > new Date();
+  }
+  if (user.isPremium && user.premiumUntil) {
+    return new Date(user.premiumUntil) > new Date();
+  }
+  return false;
 }
 
 // 格式化日期

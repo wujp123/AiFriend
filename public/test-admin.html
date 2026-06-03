@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试管理后台数据</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f7fa;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #333;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #5568d3;
+    }
+    pre {
+      background: #f9fafb;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    .success { color: #4ade80; }
+    .error { color: #ef4444; }
+    .info { color: #667eea; }
+  </style>
+</head>
+<body>
+  <h1>🧪 管理后台数据测试</h1>
+  
+  <div class="section">
+    <h2>1. 创建测试数据</h2>
+    <button onclick="createTestUser()">创建测试用户</button>
+    <button onclick="createTestPayment()">创建测试支付</button>
+    <button onclick="createTestConversation()">创建测试对话</button>
+    <button onclick="clearAllData()" style="background: #ef4444;">清空所有数据</button>
+    <div id="createResult"></div>
+  </div>
+  
+  <div class="section">
+    <h2>2. 查看 localStorage 数据</h2>
+    <button onclick="checkStorage()">检查存储</button>
+    <button onclick="viewUsers()">查看用户</button>
+    <button onclick="viewPayments()">查看支付</button>
+    <button onclick="viewConversations()">查看对话</button>
+    <div id="storageResult"></div>
+  </div>
+  
+  <div class="section">
+    <h2>3. 测试 admin.js 函数</h2>
+    <button onclick="testGetAllUsers()">测试 getAllUsers()</button>
+    <button onclick="testGetPayments()">测试 getPayments()</button>
+    <button onclick="testIsPremium()">测试 isPremiumUser()</button>
+    <div id="testResult"></div>
+  </div>
+  
+  <div class="section">
+    <h2>4. 打开管理后台</h2>
+    <button onclick="window.open('admin.html', '_blank')">打开 admin.html</button>
+    <button onclick="window.open('admin-simple.html', '_blank')">打开 admin-simple.html</button>
+    <p style="color: #666; font-size: 14px; margin-top: 10px;">
+      密码: admin123456
+    </p>
+  </div>
+
+  <script>
+    function log(message, type = 'info') {
+      const colors = {
+        success: '#4ade80',
+        error: '#ef4444',
+        info: '#667eea'
+      };
+      return `<div style="color: ${colors[type]}; margin: 10px 0;">${message}</div>`;
+    }
+
+    // 创建测试用户
+    function createTestUser() {
+      const users = JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+      const userId = 'test_user_' + Date.now();
+      
+      users[userId] = {
+        id: userId,
+        firstName: '测试用户',
+        username: 'testuser',
+        language: 'zh',
+        currentRole: 'sister',
+        freeTries: 5,
+        lastReset: new Date().toDateString(),
+        isPremium: false,
+        premiumUntil: null,
+        createdAt: new Date().toISOString(),
+        apiKey: ''
+      };
+      
+      localStorage.setItem('ifriendly_users', JSON.stringify(users));
+      
+      document.getElementById('createResult').innerHTML = log('✅ 测试用户已创建！ID: ' + userId, 'success');
+    }
+
+    // 创建测试会员用户
+    function createTestPremiumUser() {
+      const users = JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+      const userId = 'premium_user_' + Date.now();
+      const expireDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      
+      users[userId] = {
+        id: userId,
+        firstName: '会员用户',
+        username: 'premiumuser',
+        language: 'zh',
+        currentRole: 'girlfriend',
+        freeTries: 0,
+        lastReset: new Date().toDateString(),
+        isPremium: true,
+        premiumUntil: expireDate,
+        membership: {
+          type: 'premium',
+          expireAt: expireDate
+        },
+        createdAt: new Date().toISOString(),
+        apiKey: ''
+      };
+      
+      localStorage.setItem('ifriendly_users', JSON.stringify(users));
+      
+      document.getElementById('createResult').innerHTML = log('✅ 会员用户已创建！ID: ' + userId, 'success');
+    }
+
+    // 创建测试支付
+    function createTestPayment() {
+      const payments = JSON.parse(localStorage.getItem('ifriendly_payments') || '[]');
+      const users = JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+      
+      // 如果没有用户，先创建一个
+      let userId = Object.keys(users)[0];
+      if (!userId) {
+        createTestUser();
+        const newUsers = JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+        userId = Object.keys(newUsers)[0];
+      }
+      
+      const payment = {
+        id: 'pay_' + Date.now(),
+        userId: userId,
+        planId: 'monthly',
+        amount: 5,
+        txId: '0x' + Math.random().toString(36).substring(2, 15),
+        timestamp: Date.now(),
+        createdAt: new Date().toISOString(),
+        status: 'completed'
+      };
+      
+      payments.push(payment);
+      localStorage.setItem('ifriendly_payments', JSON.stringify(payments));
+      
+      document.getElementById('createResult').innerHTML = log('✅ 测试支付记录已创建！', 'success');
+    }
+
+    // 创建测试对话
+    function createTestConversation() {
+      const conversations = JSON.parse(localStorage.getItem('ifriendly_conversations') || '{}');
+      const users = JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+      
+      // 如果没有用户，先创建一个
+      let userId = Object.keys(users)[0];
+      if (!userId) {
+        createTestUser();
+        const newUsers = JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+        userId = Object.keys(newUsers)[0];
+      }
+      
+      if (!conversations[userId]) {
+        conversations[userId] = {};
+      }
+      
+      conversations[userId]['sister'] = {
+        messages: [
+          { role: 'user', content: '你好' },
+          { role: 'assistant', content: '你好！有什么我可以帮你的吗？' }
+        ],
+        updatedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('ifriendly_conversations', JSON.stringify(conversations));
+      
+      document.getElementById('createResult').innerHTML = log('✅ 测试对话已创建！', 'success');
+    }
+
+    // 清空所有数据
+    function clearAllData() {
+      if (confirm('确定要清空所有测试数据吗？')) {
+        localStorage.removeItem('ifriendly_users');
+        localStorage.removeItem('ifriendly_payments');
+        localStorage.removeItem('ifriendly_conversations');
+        localStorage.removeItem('used_transactions');
+        
+        document.getElementById('createResult').innerHTML = log('🗑️ 所有数据已清空！', 'error');
+      }
+    }
+
+    // 检查存储
+    function checkStorage() {
+      const info = {
+        users: localStorage.getItem('ifriendly_users') ? 'yes ✅' : 'no ❌',
+        payments: localStorage.getItem('ifriendly_payments') ? 'yes ✅' : 'no ❌',
+        conversations: localStorage.getItem('ifriendly_conversations') ? 'yes ✅' : 'no ❌',
+        used_transactions: localStorage.getItem('used_transactions') ? 'yes ✅' : 'no ❌'
+      };
+      
+      document.getElementById('storageResult').innerHTML = '<pre>' + JSON.stringify(info, null, 2) + '</pre>';
+    }
+
+    // 查看用户
+    function viewUsers() {
+      const users = JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+      const count = Object.keys(users).length;
+      
+      document.getElementById('storageResult').innerHTML = 
+        log(`找到 ${count} 个用户`, 'info') +
+        '<pre>' + JSON.stringify(users, null, 2) + '</pre>';
+    }
+
+    // 查看支付
+    function viewPayments() {
+      const payments = JSON.parse(localStorage.getItem('ifriendly_payments') || '[]');
+      
+      document.getElementById('storageResult').innerHTML = 
+        log(`找到 ${payments.length} 条支付记录`, 'info') +
+        '<pre>' + JSON.stringify(payments, null, 2) + '</pre>';
+    }
+
+    // 查看对话
+    function viewConversations() {
+      const conversations = JSON.parse(localStorage.getItem('ifriendly_conversations') || '{}');
+      const userCount = Object.keys(conversations).length;
+      let totalConvs = 0;
+      Object.values(conversations).forEach(userConvs => {
+        totalConvs += Object.keys(userConvs).length;
+      });
+      
+      document.getElementById('storageResult').innerHTML = 
+        log(`${userCount} 个用户，共 ${totalConvs} 个对话`, 'info') +
+        '<pre>' + JSON.stringify(conversations, null, 2) + '</pre>';
+    }
+
+    // 测试 getAllUsers
+    function testGetAllUsers() {
+      try {
+        const usersObj = JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+        const users = Object.entries(usersObj).map(([userId, userData]) => ({
+          ...userData,
+          id: userData.id || userId
+        }));
+        
+        document.getElementById('testResult').innerHTML = 
+          log(`✅ getAllUsers() 返回 ${users.length} 个用户`, 'success') +
+          '<pre>' + JSON.stringify(users, null, 2) + '</pre>';
+      } catch (e) {
+        document.getElementById('testResult').innerHTML = log('❌ 错误: ' + e.message, 'error');
+      }
+    }
+
+    // 测试 getPayments
+    function testGetPayments() {
+      try {
+        const payments = JSON.parse(localStorage.getItem('ifriendly_payments') || '[]');
+        
+        document.getElementById('testResult').innerHTML = 
+          log(`✅ getPayments() 返回 ${payments.length} 条记录`, 'success') +
+          '<pre>' + JSON.stringify(payments, null, 2) + '</pre>';
+      } catch (e) {
+        document.getElementById('testResult').innerHTML = log('❌ 错误: ' + e.message, 'error');
+      }
+    }
+
+    // 测试 isPremium
+    function testIsPremium() {
+      try {
+        const users = JSON.parse(localStorage.getItem('ifriendly_users') || '{}');
+        const results = {};
+        
+        Object.entries(users).forEach(([userId, user]) => {
+          let isPremium = false;
+          
+          if (user.membership && user.membership.expireAt) {
+            isPremium = new Date(user.membership.expireAt) > new Date();
+          } else if (user.isPremium && user.premiumUntil) {
+            isPremium = new Date(user.premiumUntil) > new Date();
+          }
+          
+          results[userId] = {
+            name: user.firstName || user.username,
+            isPremium: isPremium,
+            expireAt: user.premiumUntil || user.membership?.expireAt || null
+          };
+        });
+        
+        document.getElementById('testResult').innerHTML = 
+          log(`✅ isPremiumUser() 测试完成`, 'success') +
+          '<pre>' + JSON.stringify(results, null, 2) + '</pre>';
+      } catch (e) {
+        document.getElementById('testResult').innerHTML = log('❌ 错误: ' + e.message, 'error');
+      }
+    }
+
+    // 页面加载时检查存储
+    window.addEventListener('load', () => {
+      checkStorage();
+    });
+  </script>
+</body>
+</html>
