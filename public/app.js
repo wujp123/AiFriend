@@ -123,9 +123,17 @@ async function init() {
     localStorage.setItem('hasVisited', 'true');
     showView('roleSquare');
   } else {
-    // 老用户 - 显示聊天历史列表
-    console.log('📜 Showing chat history for returning user');
-    showView('chatHistory');
+    // 老用户 - 检查是否有聊天历史
+    const conversations = storage.getConversations(currentUser.id);
+    const hasHistory = Object.keys(conversations).length > 0;
+    
+    if (hasHistory) {
+      console.log('📜 Showing chat history for returning user');
+      showView('chatHistory');
+    } else {
+      console.log('📱 No chat history, showing role square');
+      showView('roleSquare');
+    }
   }
   
   console.log('✅ AiFriend initialized successfully');
@@ -540,19 +548,39 @@ function clearCurrentChat() {
     tg.showConfirm(confirmMessage, (confirmed) => {
       if (confirmed) {
         storage.clearConversation(currentUser.id, currentUser.currentRole);
-        elements.chatMessages.innerHTML = '';
-        addWelcomeMessage();
         tg.showAlert(clearedMessage);
         tg.HapticFeedback.notificationOccurred('success');
+        
+        // 检查是否还有其他对话
+        const conversations = storage.getConversations(currentUser.id);
+        const hasHistory = Object.keys(conversations).length > 0;
+        
+        if (hasHistory) {
+          // 还有其他对话，返回历史列表
+          showView('chatHistory');
+        } else {
+          // 没有历史记录了，显示角色广场
+          showView('roleSquare');
+        }
       }
     });
   } catch (e) {
     // Fallback for non-Telegram environment
     if (confirm(confirmMessage)) {
       storage.clearConversation(currentUser.id, currentUser.currentRole);
-      elements.chatMessages.innerHTML = '';
-      addWelcomeMessage();
       alert(clearedMessage);
+      
+      // 检查是否还有其他对话
+      const conversations = storage.getConversations(currentUser.id);
+      const hasHistory = Object.keys(conversations).length > 0;
+      
+      if (hasHistory) {
+        // 还有其他对话，返回历史列表
+        showView('chatHistory');
+      } else {
+        // 没有历史记录了，显示角色广场
+        showView('roleSquare');
+      }
     }
   }
 }
@@ -568,9 +596,9 @@ function clearAllHistory() {
         Object.keys(allConvs).forEach(roleId => {
           storage.clearConversation(currentUser.id, roleId);
         });
-        elements.chatMessages.innerHTML = '';
         tg.showAlert('所有对话记录已清空');
-        renderChatHistory();
+        // 没有历史记录了，显示角色广场
+        showView('roleSquare');
       }
     });
   } catch (e) {
@@ -579,9 +607,9 @@ function clearAllHistory() {
       Object.keys(allConvs).forEach(roleId => {
         storage.clearConversation(currentUser.id, roleId);
       });
-      elements.chatMessages.innerHTML = '';
       alert('所有对话记录已清空');
-      renderChatHistory();
+      // 没有历史记录了，显示角色广场
+      showView('roleSquare');
     }
   }
 }
@@ -596,14 +624,34 @@ function deleteRoleConversation(roleId) {
       if (confirmed) {
         storage.clearConversation(currentUser.id, roleId);
         tg.showAlert('已删除');
-        renderChatHistory();
+        
+        // 检查是否还有其他对话
+        const conversations = storage.getConversations(currentUser.id);
+        const hasHistory = Object.keys(conversations).length > 0;
+        
+        if (hasHistory) {
+          renderChatHistory();
+        } else {
+          // 没有历史记录了，显示角色广场
+          showView('roleSquare');
+        }
       }
     });
   } catch (e) {
     if (confirm(confirmMessage)) {
       storage.clearConversation(currentUser.id, roleId);
       alert('已删除');
-      renderChatHistory();
+      
+      // 检查是否还有其他对话
+      const conversations = storage.getConversations(currentUser.id);
+      const hasHistory = Object.keys(conversations).length > 0;
+      
+      if (hasHistory) {
+        renderChatHistory();
+      } else {
+        // 没有历史记录了，显示角色广场
+        showView('roleSquare');
+      }
     }
   }
 }
