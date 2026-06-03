@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AiFriend Test</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    .test-box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <div class="test-box">
+    <h1>🔧 AiFriend 测试页面</h1>
+    <div id="status"></div>
+    <hr>
+    <p><strong>CSS 文件:</strong> <span id="cssStatus">检查中...</span></p>
+    <p><strong>JS 模块:</strong> <span id="jsStatus">检查中...</span></p>
+    <p><strong>Telegram SDK:</strong> <span id="tgStatus">检查中...</span></p>
+    <hr>
+    <button onclick="location.href='index.html'" style="padding:10px 20px; font-size:16px;">
+      返回主应用
+    </button>
+  </div>
+  
+  <script>
+    // 检查 CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'style.css';
+    link.onload = () => {
+      document.getElementById('cssStatus').innerHTML = '<span class="success">✓ 加载成功</span>';
+    };
+    link.onerror = () => {
+      document.getElementById('cssStatus').innerHTML = '<span class="error">✗ 加载失败</span>';
+    };
+    document.head.appendChild(link);
+    
+    // 检查 Telegram SDK
+    if (window.Telegram && window.Telegram.WebApp) {
+      document.getElementById('tgStatus').innerHTML = '<span class="success">✓ 已加载</span>';
+    } else {
+      document.getElementById('tgStatus').innerHTML = '<span class="error">✗ 未加载</span>';
+    }
+    
+    // 检查 JS 模块
+    import('./config.js')
+      .then(() => {
+        document.getElementById('jsStatus').innerHTML = '<span class="success">✓ 模块可用</span>';
+      })
+      .catch(err => {
+        document.getElementById('jsStatus').innerHTML = '<span class="error">✗ 模块加载失败: ' + err.message + '</span>';
+      });
+  </script>
+</body>
+</html>
