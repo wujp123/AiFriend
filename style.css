@@ -44,6 +44,27 @@ header {
   gap: 10px;
 }
 
+.language-selector {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+  background: var(--tg-theme-bg-color, white);
+  color: var(--tg-theme-text-color, #333);
+  font-size: 0.9em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.language-selector:focus {
+  border-color: var(--tg-theme-button-color, #667eea);
+}
+
+.language-selector:active {
+  opacity: 0.8;
+}
+
 .header-info h1 {
   font-size: 1.3em;
   margin: 0;
@@ -534,6 +555,22 @@ main {
 
   .chat-container {
     padding: 10px;
+  }
+  
+  .language-selector {
+    font-size: 0.85em;
+    padding: 5px 8px;
+  }
+  
+  .quota-btn {
+    padding: 6px 12px;
+    font-size: 0.9em;
+  }
+  
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.3em;
   }
 }
 

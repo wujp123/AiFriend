@@ -46,6 +46,7 @@ const elements = {
   quotaBtn: document.getElementById('quotaBtn'),
   quotaText: document.getElementById('quotaText'),
   settingsBtn: document.getElementById('settingsBtn'),
+  headerLanguageSelect: document.getElementById('headerLanguageSelect'),
   
   // Main view
   mainView: document.getElementById('mainView'),
@@ -136,6 +137,9 @@ function setupEventListeners() {
   elements.quotaBtn.addEventListener('click', () => showView('membership'));
   elements.settingsBtn.addEventListener('click', () => showView('settings'));
   
+  // Header语言切换
+  elements.headerLanguageSelect.addEventListener('change', changeLanguageFromHeader);
+  
   // 返回按钮
   elements.backFromRoles.addEventListener('click', () => showView('chatHistory'));
   elements.backFromMembership.addEventListener('click', () => showView('chatHistory'));
@@ -206,6 +210,12 @@ function updateUI() {
   }
   
   elements.messageInput.placeholder = t('typingPlaceholder', currentLang);
+  
+  // 同步header和设置页面的语言选择器
+  elements.headerLanguageSelect.value = currentLang;
+  if (elements.languageSelect) {
+    elements.languageSelect.value = currentLang;
+  }
   
   // RTL support for Arabic
   if (currentLang === 'ar') {
@@ -424,7 +434,32 @@ function renderSettings() {
   elements.apiKeyInput.value = currentUser.apiKey || '';
 }
 
-// 切换语言
+// 切换语言（从header）
+function changeLanguageFromHeader() {
+  currentLang = elements.headerLanguageSelect.value;
+  storage.updateUser(currentUser.id, { language: currentLang });
+  console.log(`Language changed to: ${currentLang}`);
+  updateUI();
+  
+  // 刷新当前视图以应用新语言
+  if (currentView === 'roleSquare') {
+    renderRoleSquare();
+  } else if (currentView === 'chatHistory') {
+    renderChatHistory();
+  } else if (currentView === 'membership') {
+    renderMembership();
+  } else if (currentView === 'settings') {
+    renderSettings();
+  }
+  
+  try {
+    tg.HapticFeedback.impactOccurred('light');
+  } catch (e) {
+    // Ignore
+  }
+}
+
+// 切换语言（从设置页）
 function changeLanguage() {
   currentLang = elements.languageSelect.value;
   storage.updateUser(currentUser.id, { language: currentLang });
@@ -442,7 +477,11 @@ function changeLanguage() {
     renderSettings();
   }
   
-  tg.showAlert(t('cleared', currentLang)); // 显示语言已切换
+  try {
+    tg.showAlert(t('cleared', currentLang));
+  } catch (e) {
+    // Ignore
+  }
 }
 
 // 保存API Key
