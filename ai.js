@@ -11,6 +11,8 @@ export class AIService {
   
   // 生成 AI 回复（可能包含图片）
   async generateResponse(userId, roleId, message, userLanguage = 'zh') {
+    console.log('🌍 AI Language:', userLanguage);
+    
     const role = getRole(roleId);
     // 不使用历史记录，避免历史语言影响当前回复
     // const history = storage.getConversationHistory(userId, roleId, 10);
@@ -30,16 +32,16 @@ export class AIService {
     };
     
     const languageInstructions = {
-      'zh': '⚠️ 重要指令：你必须用中文回复所有消息。不要使用英语、日语或任何其他语言。',
-      'en': '⚠️ CRITICAL INSTRUCTION: You MUST respond in English only. Never use Chinese, Japanese, or any other language. This is mandatory.',
-      'ja': '⚠️ 重要指令：すべてのメッセージに日本語のみで返信してください。他の言語を使用しないでください。',
-      'ko': '⚠️ 중요 지침: 모든 메시지에 한국어로만 응답해야 합니다. 다른 언어를 사용하지 마세요.',
-      'ru': '⚠️ ВАЖНАЯ ИНСТРУКЦИЯ: Вы ДОЛЖНЫ отвечать только на русском языке. Не используйте другие языки.',
-      'es': '⚠️ INSTRUCCIÓN CRÍTICA: Debes responder solo en español. No uses otros idiomas.',
-      'fr': '⚠️ INSTRUCTION CRITIQUE: Vous devez répondre uniquement en français. N\'utilisez pas d\'autres langues.',
-      'de': '⚠️ KRITISCHE ANWEISUNG: Sie müssen nur auf Deutsch antworten. Verwenden Sie keine anderen Sprachen.',
-      'pt': '⚠️ INSTRUÇÃO CRÍTICA: Você DEVE responder apenas em português. Não use outros idiomas.',
-      'ar': '⚠️ تعليمات مهمة: يجب أن ترد باللغة العربية فقط. لا تستخدم لغات أخرى.'
+      'zh': '你必须用中文回复所有消息。',
+      'en': 'You MUST respond in English ONLY. Do NOT use Chinese, Japanese, or any other language.',
+      'ja': 'すべてのメッセージに日本語のみで返信してください。',
+      'ko': '모든 메시지에 한국어로만 응답해야 합니다.',
+      'ru': 'Вы ДОЛЖНЫ отвечать только на русском языке.',
+      'es': 'Debes responder solo en español.',
+      'fr': 'Vous devez répondre uniquement en français.',
+      'de': 'Sie müssen nur auf Deutsch antworten.',
+      'pt': 'Você DEVE responder apenas em português.',
+      'ar': 'يجب أن ترد باللغة العربية فقط.'
     };
     
     const currentLanguage = languageNames[userLanguage] || languageNames['en'];
@@ -53,19 +55,27 @@ export class AIService {
       imageResult = await imageService.generateContextualSelfie(userId, roleId, message);
     }
     
-    // 在用户消息前添加语言提示
-    const userMessageWithLanguage = `[Language: ${currentLanguage}] ${message}`;
+    // 构建系统提示 - 语言指令放在最顶部
+    const systemPrompt = `LANGUAGE INSTRUCTION: ${languageInstruction}
+Response Language: ${currentLanguage}
+
+${role.systemPrompt}${imageResult?.success ? '\n\n当你发送自拍或照片时，要自然地描述你当时的样子、心情、环境等，让对话更生动。' : ''}`;
     
-    // 构建消息列表 - 语言指令放在系统提示最前面
+    // 用户消息添加语言标记
+    const userMessage = `[Response in: ${currentLanguage}]\n${message}`;
+    
+    console.log('📝 System prompt:', systemPrompt);
+    console.log('📝 User message:', userMessage);
+    
+    // 构建消息列表
     const messages = [
       {
         role: 'system',
-        content: `${languageInstruction}\n\nYour response language: ${currentLanguage}\n\n${role.systemPrompt}` + (imageResult?.success ? 
-          '\n\n当你发送自拍或照片时，要自然地描述你当时的样子、心情、环境等，让对话更生动。' : '')
+        content: systemPrompt
       },
       {
         role: 'user',
-        content: userMessageWithLanguage
+        content: userMessage
       }
     ];
     
@@ -99,6 +109,8 @@ export class AIService {
       
       const data = await response.json();
       const textReply = data.choices[0].message.content;
+      
+      console.log('🤖 AI Response:', textReply);
       
       return {
         text: textReply,

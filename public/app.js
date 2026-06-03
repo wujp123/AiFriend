@@ -668,6 +668,9 @@ async function sendMessage() {
   const message = elements.messageInput.value.trim();
   if (!message) return;
   
+  console.log('📤 Sending message with language:', currentLang);
+  console.log('📤 Current user language setting:', currentUser.language);
+  
   if (!storage.canSendMessage(currentUser.id)) {
     tg.showPopup({
       title: t('noMoreTries', currentLang),
