@@ -15,6 +15,7 @@ tg.enableClosingConfirmation();
 let currentLang = 'zh';
 let currentUser = null;
 let currentView = 'main';
+let isFirstTimeUser = false;
 
 // DOM 元素
 const elements = {
@@ -31,6 +32,12 @@ const elements = {
   chatMessages: document.getElementById('chatMessages'),
   messageInput: document.getElementById('messageInput'),
   sendButton: document.getElementById('sendButton'),
+  
+  // Chat history view
+  chatHistoryView: document.getElementById('chatHistoryView'),
+  chatHistoryTitle: document.getElementById('chatHistoryTitle'),
+  newChatBtn: document.getElementById('newChatBtn'),
+  historyList: document.getElementById('historyList'),
   
   // Role square view
   roleSquareView: document.getElementById('roleSquareView'),
@@ -59,10 +66,22 @@ function init() {
   currentUser = storage.getUser(userId);
   currentLang = detectLanguage(user?.language_code) || currentUser.language;
   
+  // 检查是否首次访问
+  const hasVisitedBefore = localStorage.getItem('hasVisited');
+  isFirstTimeUser = !hasVisitedBefore;
+  
   setupEventListeners();
   updateUI();
-  loadConversation();
-  addWelcomeMessage();
+  
+  // 决定初始显示哪个视图
+  if (isFirstTimeUser) {
+    // 首次访问 - 显示角色广场
+    localStorage.setItem('hasVisited', 'true');
+    showView('roleSquare');
+  } else {
+    // 老用户 - 显示聊天历史列表
+    showView('chatHistory');
+  }
 }
 
 // 设置事件监听
@@ -73,9 +92,12 @@ function setupEventListeners() {
   elements.settingsBtn.addEventListener('click', () => showView('settings'));
   
   // 返回按钮
-  elements.backFromRoles.addEventListener('click', () => showView('main'));
-  elements.backFromMembership.addEventListener('click', () => showView('main'));
-  elements.backFromSettings.addEventListener('click', () => showView('main'));
+  elements.backFromRoles.addEventListener('click', () => showView('chatHistory'));
+  elements.backFromMembership.addEventListener('click', () => showView('chatHistory'));
+  elements.backFromSettings.addEventListener('click', () => showView('chatHistory'));
+  
+  // 新对话按钮
+  elements.newChatBtn.addEventListener('click', () => showView('roleSquare'));
   
   // 发送消息
   elements.sendButton.addEventListener('click', sendMessage);
@@ -94,12 +116,17 @@ function showView(viewName) {
   currentView = viewName;
   
   elements.mainView.classList.add('hidden');
+  elements.chatHistoryView.classList.add('hidden');
   elements.roleSquareView.classList.add('hidden');
   elements.membershipView.classList.add('hidden');
   elements.settingsView.classList.add('hidden');
   
   if (viewName === 'main') {
     elements.mainView.classList.remove('hidden');
+    loadConversation();
+  } else if (viewName === 'chatHistory') {
+    elements.chatHistoryView.classList.remove('hidden');
+    renderChatHistory();
   } else if (viewName === 'roleSquare') {
     elements.roleSquareView.classList.remove('hidden');
     renderRoleSquare();
@@ -223,9 +250,77 @@ function selectRole(roleId) {
   storage.updateUser(currentUser.id, currentUser);
   updateUI();
   showView('main');
-  loadConversation();
   
   tg.HapticFeedback.notificationOccurred('success');
+}
+
+// 渲染聊天历史列表
+function renderChatHistory() {
+  elements.chatHistoryTitle.textContent = t('chatHistory', currentLang);
+  elements.historyList.innerHTML = '';
+  
+  const conversations = storage.getConversations(currentUser.id);
+  const roleIds = Object.keys(conversations);
+  
+  if (roleIds.length === 0) {
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'empty-history';
+    emptyDiv.innerHTML = `
+      <p>${t('noHistory', currentLang)}</p>
+      <button class="primary-btn" id="startNewChatBtn">${t('newChat', currentLang)}</button>
+    `;
+    elements.historyList.appendChild(emptyDiv);
+    
+    document.getElementById('startNewChatBtn').addEventListener('click', () => {
+      showView('roleSquare');
+    });
+    return;
+  }
+  
+  roleIds.forEach(roleId => {
+    const role = getRole(roleId);
+    const conv = conversations[roleId];
+    const lastMessage = conv.messages[conv.messages.length - 1];
+    
+    const historyCard = document.createElement('div');
+    historyCard.className = 'history-card';
+    
+    const roleAvatar = document.createElement('img');
+    roleAvatar.src = role.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(role.emoji)}&size=200`;
+    roleAvatar.alt = role.name || role.emoji;
+    roleAvatar.className = 'history-avatar';
+    
+    const historyInfo = document.createElement('div');
+    historyInfo.className = 'history-info';
+    
+    const roleName = document.createElement('div');
+    roleName.className = 'history-role-name';
+    roleName.textContent = `${role.emoji} ${t(`roles.${role.id}.name`, currentLang)}`;
+    
+    const lastMsgPreview = document.createElement('div');
+    lastMsgPreview.className = 'history-last-msg';
+    lastMsgPreview.textContent = lastMessage ? lastMessage.content.substring(0, 50) + '...' : '';
+    
+    const timestamp = document.createElement('div');
+    timestamp.className = 'history-time';
+    timestamp.textContent = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString() : '';
+    
+    historyInfo.appendChild(roleName);
+    historyInfo.appendChild(lastMsgPreview);
+    
+    historyCard.appendChild(roleAvatar);
+    historyCard.appendChild(historyInfo);
+    historyCard.appendChild(timestamp);
+    
+    historyCard.addEventListener('click', () => {
+      currentUser.currentRole = roleId;
+      storage.updateUser(currentUser.id, currentUser);
+      updateUI();
+      showView('main');
+    });
+    
+    elements.historyList.appendChild(historyCard);
+  });
 }
 
 // 渲染会员页面

@@ -27,7 +27,7 @@
       </div>
     </header>
 
-    <main id="mainView">
+    <main id="mainView" class="hidden">
       <div class="chat-container">
         <div id="chatMessages" class="chat-messages"></div>
         <div class="chat-input-container">
@@ -36,6 +36,16 @@
         </div>
       </div>
     </main>
+
+    <div id="chatHistoryView" class="view hidden">
+      <div class="view-header">
+        <h2 id="chatHistoryTitle">Chat History</h2>
+        <button id="newChatBtn" class="icon-btn">➕</button>
+      </div>
+      <div class="history-content">
+        <div id="historyList" class="history-list"></div>
+      </div>
+    </div>
 
     <div id="roleSquareView" class="view hidden">
       <div class="view-header">

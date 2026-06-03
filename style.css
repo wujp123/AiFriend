@@ -547,3 +547,95 @@ main {
     background: var(--tg-theme-secondary-bg-color, #2a2a2a);
   }
 }
+
+/* 聊天历史列表样式 */
+.history-content {
+  padding: 15px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-card {
+  background: var(--tg-theme-bg-color, white);
+  border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+  border-radius: 15px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.history-card:active {
+  transform: scale(0.98);
+  background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+}
+
+.history-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+  flex-shrink: 0;
+}
+
+.history-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-role-name {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: var(--tg-theme-text-color, #333);
+  margin-bottom: 5px;
+}
+
+.history-last-msg {
+  font-size: 0.9em;
+  color: var(--tg-theme-hint-color, #666);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-time {
+  font-size: 0.8em;
+  color: var(--tg-theme-hint-color, #999);
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding-top: 5px;
+}
+
+.empty-history {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--tg-theme-hint-color, #666);
+}
+
+.empty-history p {
+  font-size: 1.1em;
+  margin-bottom: 20px;
+}
+
+.primary-btn {
+  padding: 12px 30px;
+  background: var(--tg-theme-button-color, #667eea);
+  color: var(--tg-theme-button-text-color, white);
+  border: none;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.primary-btn:active {
+  opacity: 0.8;
+}
