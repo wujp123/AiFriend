@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试角色显示</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { padding: 20px; }
+    h1 { text-align: center; margin-bottom: 30px; }
+    .test-note {
+      background: #fffacd;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: 1px solid #f0e68c;
+    }
+    .role-category { margin-bottom: 40px; }
+  </style>
+</head>
+<body>
+  <h1>🧪 AiFriend 角色显示测试</h1>
+  
+  <div class="test-note">
+    <h3>测试说明：</h3>
+    <ul>
+      <li>此页面测试所有17个角色是否正常显示</li>
+      <li>检查角色头像、名称、描述是否正确</li>
+      <li>检查图片加载是否正常</li>
+      <li>点击角色卡片查看控制台日志</li>
+    </ul>
+    <p><a href="index.html">← 返回主页</a> | <a href="debug.html">调试工具</a></p>
+  </div>
+  
+  <div id="roleCategories"></div>
+  
+  <script type="module">
+    import { roles, getRolesByCategory } from './roles.js';
+    import { t } from './i18n.js';
+    
+    console.log('Loading test page...');
+    console.log('Total roles:', Object.keys(roles).length);
+    
+    const currentLang = 'zh';
+    const categorized = getRolesByCategory(currentLang);
+    const container = document.getElementById('roleCategories');
+    
+    Object.entries(categorized).forEach(([category, roleList]) => {
+      console.log(`Category: ${category}, Roles: ${roleList.length}`);
+      
+      const categoryDiv = document.createElement('div');
+      categoryDiv.className = 'role-category';
+      
+      const categoryTitle = document.createElement('h3');
+      categoryTitle.textContent = t(`categories.${category}`, currentLang);
+      categoryDiv.appendChild(categoryTitle);
+      
+      const rolesGrid = document.createElement('div');
+      rolesGrid.className = 'roles-grid';
+      
+      roleList.forEach(role => {
+        const roleCard = document.createElement('div');
+        roleCard.className = 'role-card';
+        if (!role.free) roleCard.classList.add('locked');
+        
+        // 头像
+        const roleImg = document.createElement('img');
+        roleImg.src = role.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(role.emoji)}&size=200`;
+        roleImg.alt = t(`roles.${role.id}.name`, currentLang);
+        roleImg.className = 'role-avatar';
+        roleImg.onload = () => console.log(`✓ ${role.id} avatar loaded`);
+        roleImg.onerror = () => {
+          console.error(`✗ ${role.id} avatar failed to load`);
+          roleImg.style.display = 'none';
+        };
+        
+        // Emoji备用
+        const roleEmoji = document.createElement('div');
+        roleEmoji.className = 'role-emoji';
+        roleEmoji.textContent = role.emoji;
+        roleEmoji.style.display = 'none';
+        
+        // 名称
+        const roleName = document.createElement('div');
+        roleName.className = 'role-name';
+        roleName.textContent = t(`roles.${role.id}.name`, currentLang);
+        
+        // 描述
+        const roleDesc = document.createElement('div');
+        roleDesc.className = 'role-desc';
+        roleDesc.textContent = t(`roles.${role.id}.desc`, currentLang);
+        
+        roleCard.appendChild(roleImg);
+        roleCard.appendChild(roleEmoji);
+        roleCard.appendChild(roleName);
+        roleCard.appendChild(roleDesc);
+        
+        if (!role.free) {
+          const lockIcon = document.createElement('div');
+          lockIcon.className = 'lock-icon';
+          lockIcon.textContent = '🔒';
+          roleCard.appendChild(lockIcon);
+        }
+        
+        roleCard.addEventListener('click', () => {
+          console.log('Clicked role:', role);
+          alert(`角色: ${t(`roles.${role.id}.name`, currentLang)}\n${role.free ? '免费' : '会员专属'}`);
+        });
+        
+        rolesGrid.appendChild(roleCard);
+      });
+      
+      categoryDiv.appendChild(rolesGrid);
+      container.appendChild(categoryDiv);
+    });
+    
+    console.log('✅ Test page loaded successfully');
+  </script>
+</body>
+</html>
