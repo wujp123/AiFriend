@@ -8,9 +8,28 @@ import { imageService } from './image.js';
 import { languageDetector } from './lang-detect.js';
 
 // Telegram Web App
-const tg = window.Telegram.WebApp;
-tg.expand();
-tg.enableClosingConfirmation();
+const tg = window.Telegram?.WebApp || {
+  initDataUnsafe: { user: null },
+  expand: () => {},
+  enableClosingConfirmation: () => {},
+  showAlert: (msg) => alert(msg),
+  showPopup: (opts, cb) => { 
+    if (confirm(opts.message)) cb('confirm'); 
+    else cb('cancel');
+  },
+  showConfirm: (msg, cb) => cb(confirm(msg)),
+  HapticFeedback: {
+    impactOccurred: () => {},
+    notificationOccurred: () => {}
+  }
+};
+
+try {
+  tg.expand();
+  tg.enableClosingConfirmation();
+} catch (e) {
+  console.warn('Telegram WebApp API not available:', e);
+}
 
 // 全局状态
 let currentLang = 'zh';
@@ -61,10 +80,14 @@ const elements = {
 
 // 初始化
 async function init() {
+  console.log('🚀 Initializing AiFriend...');
+  
   const user = tg.initDataUnsafe.user;
   const userId = user?.id || 'demo_user';
+  console.log('User ID:', userId);
   
   currentUser = storage.getUser(userId);
+  console.log('Current user:', currentUser);
   
   // 智能语言检测（优先级：用户设置 > Telegram > IP > 浏览器）
   if (currentUser.language) {
@@ -72,15 +95,21 @@ async function init() {
     console.log(`Using saved user language: ${currentLang}`);
   } else {
     // 使用智能语言检测
-    currentLang = await languageDetector.detect(user?.language_code, currentUser.language);
-    currentUser.language = currentLang;
-    storage.updateUser(userId, currentUser);
-    console.log(`Auto-detected language: ${currentLang}`);
+    try {
+      currentLang = await languageDetector.detect(user?.language_code, currentUser.language);
+      currentUser.language = currentLang;
+      storage.updateUser(userId, currentUser);
+      console.log(`Auto-detected language: ${currentLang}`);
+    } catch (e) {
+      console.error('Language detection failed:', e);
+      currentLang = 'en';
+    }
   }
   
   // 检查是否首次访问
   const hasVisitedBefore = localStorage.getItem('hasVisited');
   isFirstTimeUser = !hasVisitedBefore;
+  console.log('Is first time user:', isFirstTimeUser);
   
   setupEventListeners();
   updateUI();
@@ -88,12 +117,16 @@ async function init() {
   // 决定初始显示哪个视图
   if (isFirstTimeUser) {
     // 首次访问 - 显示角色广场
+    console.log('📱 Showing role square for first-time user');
     localStorage.setItem('hasVisited', 'true');
     showView('roleSquare');
   } else {
     // 老用户 - 显示聊天历史列表
+    console.log('📜 Showing chat history for returning user');
     showView('chatHistory');
   }
+  
+  console.log('✅ AiFriend initialized successfully');
 }
 
 // 设置事件监听
@@ -125,6 +158,7 @@ function setupEventListeners() {
 
 // 切换视图
 function showView(viewName) {
+  console.log(`Switching to view: ${viewName}`);
   currentView = viewName;
   
   elements.mainView.classList.add('hidden');
@@ -150,7 +184,11 @@ function showView(viewName) {
     renderSettings();
   }
   
-  tg.HapticFeedback.impactOccurred('light');
+  try {
+    tg.HapticFeedback.impactOccurred('light');
+  } catch (e) {
+    // Ignore haptic feedback errors
+  }
 }
 
 // 更新UI
@@ -181,11 +219,16 @@ function updateUI() {
 
 // 渲染角色广场
 function renderRoleSquare() {
+  console.log('📋 Rendering role square...');
   const categorized = getRolesByCategory(currentLang);
+  console.log('Categorized roles:', categorized);
+  
   elements.roleCategories.innerHTML = '';
   
   Object.entries(categorized).forEach(([category, roleList]) => {
     if (roleList.length === 0) return;
+    
+    console.log(`Category ${category}: ${roleList.length} roles`);
     
     const categoryDiv = document.createElement('div');
     categoryDiv.className = 'role-category';
@@ -212,10 +255,16 @@ function renderRoleSquare() {
       roleImg.src = role.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(role.emoji)}&size=200`;
       roleImg.alt = role.name || role.emoji;
       roleImg.className = 'role-avatar';
+      roleImg.onerror = function() {
+        console.warn(`Failed to load avatar for ${role.id}, using fallback`);
+        this.style.display = 'none';
+        roleCard.querySelector('.role-emoji').style.display = 'block';
+      };
       
       const roleEmoji = document.createElement('div');
       roleEmoji.className = 'role-emoji';
       roleEmoji.textContent = role.emoji;
+      roleEmoji.style.display = 'none'; // 默认隐藏，图片加载失败时显示
       
       const roleName = document.createElement('div');
       roleName.className = 'role-name';
@@ -245,6 +294,8 @@ function renderRoleSquare() {
     categoryDiv.appendChild(rolesGrid);
     elements.roleCategories.appendChild(categoryDiv);
   });
+  
+  console.log('✅ Role square rendered');
 }
 
 // 选择角色

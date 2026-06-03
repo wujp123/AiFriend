@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AiFriend Debug</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #00ff00;
+      border-radius: 5px;
+    }
+    h2 { color: #00ffff; }
+    .error { color: #ff0000; }
+    .success { color: #00ff00; }
+    button {
+      background: #00ff00;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 AiFriend 调试工具</h1>
+  
+  <div class="section">
+    <h2>1. 文件加载检查</h2>
+    <div id="fileCheck">检查中...</div>
+  </div>
+  
+  <div class="section">
+    <h2>2. 模块导入检查</h2>
+    <div id="moduleCheck">检查中...</div>
+  </div>
+  
+  <div class="section">
+    <h2>3. LocalStorage 状态</h2>
+    <div id="storageCheck">检查中...</div>
+    <button onclick="clearStorage()">清空 LocalStorage</button>
+  </div>
+  
+  <div class="section">
+    <h2>4. 视图状态</h2>
+    <div id="viewCheck">检查中...</div>
+  </div>
+  
+  <div class="section">
+    <h2>5. 操作</h2>
+    <button onclick="location.href='index.html'">返回主页</button>
+    <button onclick="location.reload()">刷新页面</button>
+    <button onclick="testRoleSquare()">测试角色广场</button>
+  </div>
+  
+  <script type="module">
+    import { roles } from './roles.js';
+    import { storage } from './storage.js';
+    import { t } from './i18n.js';
+    
+    window.roles = roles;
+    window.storage = storage;
+    window.t = t;
+    
+    // 文件检查
+    const fileCheck = document.getElementById('fileCheck');
+    fileCheck.innerHTML = `
+      <div class="success">✓ roles.js 加载成功，共 ${Object.keys(roles).length} 个角色</div>
+      <div class="success">✓ storage.js 加载成功</div>
+      <div class="success">✓ i18n.js 加载成功</div>
+    `;
+    
+    // 模块检查
+    const moduleCheck = document.getElementById('moduleCheck');
+    moduleCheck.innerHTML = `
+      <div>角色列表:</div>
+      <pre>${Object.keys(roles).join(', ')}</pre>
+    `;
+    
+    // Storage检查
+    const storageCheck = document.getElementById('storageCheck');
+    const hasVisited = localStorage.getItem('hasVisited');
+    const userData = localStorage.getItem('aifriend_users');
+    
+    storageCheck.innerHTML = `
+      <div>hasVisited: <span class="${hasVisited ? 'success' : 'error'}">${hasVisited || '未设置'}</span></div>
+      <div>用户数据: ${userData ? '已存在' : '不存在'}</div>
+    `;
+    
+    // 视图检查
+    const viewCheck = document.getElementById('viewCheck');
+    viewCheck.innerHTML = `
+      <div>当前页面: ${location.pathname}</div>
+      <div>首次访问: ${!hasVisited ? '是' : '否'}</div>
+    `;
+    
+    window.clearStorage = function() {
+      localStorage.clear();
+      alert('LocalStorage 已清空！刷新页面查看效果。');
+      location.reload();
+    };
+    
+    window.testRoleSquare = function() {
+      console.log('测试角色广场...');
+      console.log('角色数量:', Object.keys(roles).length);
+      Object.entries(roles).forEach(([id, role]) => {
+        console.log(`${id}:`, role.name || role.emoji, role.avatar);
+      });
+    };
+    
+    console.log('🔧 调试工具加载完成');
+    console.log('角色列表:', roles);
+  </script>
+</body>
+</html>
