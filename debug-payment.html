@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支付调试工具 - Payment Debug Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border-left: 4px solid #667eea;
+    }
+    
+    .section h2 {
+      color: #667eea;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    
+    .label {
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .value {
+      color: #333;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      word-break: break-all;
+      text-align: right;
+      max-width: 60%;
+    }
+    
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    
+    button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .success {
+      background: #10b981;
+    }
+    
+    .success:hover {
+      background: #059669;
+    }
+    
+    .danger {
+      background: #ef4444;
+    }
+    
+    .danger:hover {
+      background: #dc2626;
+    }
+    
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .result.success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #10b981;
+    }
+    
+    .result.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #ef4444;
+    }
+    
+    .result.info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #3b82f6;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 10px;
+      transition: border 0.3s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .badge.online {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .badge.offline {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .copy-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      margin-left: 10px;
+      width: auto;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 支付调试工具</h1>
+    <p class="subtitle">Payment Debug Tool - 诊断支付验证问题</p>
+    
+    <!-- 网络状态 -->
+    <div class="section">
+      <h2>📡 网络状态 / Network Status</h2>
+      <div class="info-row">
+        <span class="label">TronGrid API:</span>
+        <span class="value" id="apiStatus">检测中...</span>
+      </div>
+      <div class="info-row">
+        <span class="label">测试网络:</span>
+        <span class="value">Nile Testnet</span>
+      </div>
+      <div class="info-row">
+        <span class="label">API URL:</span>
+        <span class="value">https://nile.trongrid.io</span>
+      </div>
+    </div>
+    
+    <!-- 钱包信息 -->
+    <div class="section">
+      <h2>💰 钱包信息 / Wallet Info</h2>
+      <div class="info-row">
+        <span class="label">收款地址:</span>
+        <span class="value">
+          TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m
+          <button class="copy-btn" onclick="copyText('TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m')">复制</button>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="label">USDT 合约:</span>
+        <span class="value">TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj</span>
+      </div>
+      <div class="info-row">
+        <span class="label">TRX 余额:</span>
+        <span class="value" id="trxBalance">查询中...</span>
+      </div>
+      <div class="info-row">
+        <span class="label">交易数量:</span>
+        <span class="value" id="txCount">查询中...</span>
+      </div>
+    </div>
+    
+    <!-- 最近交易 -->
+    <div class="section">
+      <h2>📋 最近交易 / Recent Transactions</h2>
+      <button onclick="checkTransactions()">
+        <span id="checkTxBtn">🔍 查询最近交易</span>
+      </button>
+      <div id="txResult"></div>
+    </div>
+    
+    <!-- 手动验证 -->
+    <div class="section">
+      <h2>✅ 手动验证 / Manual Verification</h2>
+      <input type="number" id="amountInput" placeholder="输入金额 (USDT), 例如: 2" step="0.01">
+      <input type="number" id="timeInput" placeholder="时间窗口 (小时), 默认: 1" value="1" min="1" max="24">
+      <button class="success" onclick="verifyPayment()">
+        <span id="verifyBtn">🔍 验证支付</span>
+      </button>
+      <div id="verifyResult"></div>
+    </div>
+    
+    <!-- 测试交易 -->
+    <div class="section">
+      <h2>🧪 发送测试交易 / Send Test Transaction</h2>
+      <p style="color: #666; font-size: 13px; margin-bottom: 15px;">
+        使用以下信息在 TronLink 中发送测试交易：
+      </p>
+      <div class="info-row">
+        <span class="label">1️⃣ 打开 TronLink 钱包</span>
+      </div>
+      <div class="info-row">
+        <span class="label">2️⃣ 选择 Nile Testnet</span>
+      </div>
+      <div class="info-row">
+        <span class="label">3️⃣ 转账 USDT (TRC20)</span>
+      </div>
+      <div class="info-row">
+        <span class="label">4️⃣ 金额: 2 USDT</span>
+      </div>
+      <div class="info-row">
+        <span class="label">5️⃣ 到: TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m</span>
+        <button class="copy-btn" onclick="copyText('TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m')">复制地址</button>
+      </div>
+    </div>
+    
+    <!-- 获取测试币 -->
+    <div class="section">
+      <h2>💧 获取测试币 / Get Test Tokens</h2>
+      <p style="color: #666; font-size: 13px; margin-bottom: 15px;">
+        如果没有测试币，请访问水龙头获取：
+      </p>
+      <button onclick="window.open('https://nileex.io/join/getJoinPage', '_blank')">
+        🚰 访问 Nile 水龙头
+      </button>
+      <button onclick="window.open('https://nile.tronscan.org/#/address/TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m', '_blank')" style="margin-top: 10px;">
+        🔍 在区块链浏览器中查看
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://nile.trongrid.io';
+    const WALLET_ADDRESS = 'TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m';
+    const USDT_CONTRACT = 'TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj';
+    
+    // 初始化
+    async function init() {
+      await checkAPIStatus();
+      await checkWalletBalance();
+      console.log('✅ 调试工具已加载');
+    }
+    
+    // 检查 API 状态
+    async function checkAPIStatus() {
+      try {
+        const response = await fetch(`${API_URL}/wallet/getnowblock`);
+        const data = await response.json();
+        
+        if (data.blockID) {
+          document.getElementById('apiStatus').innerHTML = '<span class="badge online">✅ 在线</span>';
+          console.log('✅ API 在线，当前区块高度:', data.block_header.raw_data.number);
+        } else {
+          throw new Error('Invalid response');
+        }
+      } catch (error) {
+        document.getElementById('apiStatus').innerHTML = '<span class="badge offline">❌ 离线</span>';
+        console.error('❌ API 错误:', error);
+      }
+    }
+    
+    // 查询钱包余额
+    async function checkWalletBalance() {
+      try {
+        const response = await fetch(`${API_URL}/v1/accounts/${WALLET_ADDRESS}`);
+        const data = await response.json();
+        
+        const trxBalance = (data.data[0]?.balance || 0) / 1000000;
+        document.getElementById('trxBalance').textContent = trxBalance.toFixed(2) + ' TRX';
+        
+        console.log('💰 TRX 余额:', trxBalance, 'TRX');
+      } catch (error) {
+        document.getElementById('trxBalance').textContent = '查询失败';
+        console.error('❌ 余额查询错误:', error);
+      }
+    }
+    
+    // 查询最近交易
+    async function checkTransactions() {
+      const btn = document.getElementById('checkTxBtn');
+      const result = document.getElementById('txResult');
+      
+      btn.innerHTML = '<span class="loading"></span> 查询中...';
+      
+      try {
+        const url = `${API_URL}/v1/accounts/${WALLET_ADDRESS}/transactions/trc20?limit=50&contract_address=${USDT_CONTRACT}`;
+        console.log('📡 查询 URL:', url);
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        console.log('📦 API 响应:', data);
+        
+        if (data.success && data.data && data.data.length > 0) {
+          const txList = data.data.map((tx, index) => {
+            const amount = tx.value / 1000000;
+            const date = new Date(tx.block_timestamp);
+            const from = tx.from;
+            const to = tx.to;
+            
+            return `
+交易 ${index + 1}:
+  交易ID: ${tx.transaction_id}
+  金额: ${amount} USDT
+  时间: ${date.toLocaleString('zh-CN')}
+  发送方: ${from}
+  接收方: ${to}
+  状态: ${tx.token_info.symbol}
+            `.trim();
+          }).join('\n\n---\n\n');
+          
+          result.innerHTML = `<div class="result success">✅ 找到 ${data.data.length} 笔交易\n\n${txList}</div>`;
+          document.getElementById('txCount').textContent = data.data.length + ' 笔';
+        } else {
+          result.innerHTML = `<div class="result error">❌ 未找到任何交易\n\n可能原因：\n1. 钱包地址尚未收到任何 USDT\n2. 需要先发送测试交易\n3. 交易尚未确认\n\n建议：\n• 使用下方的"发送测试交易"部分进行测试\n• 访问水龙头获取测试 USDT</div>`;
+          document.getElementById('txCount').textContent = '0 笔';
+        }
+      } catch (error) {
+        result.innerHTML = `<div class="result error">❌ 查询失败\n\n错误: ${error.message}\n\n请检查：\n1. 网络连接\n2. API 是否在线\n3. 控制台错误信息</div>`;
+        console.error('❌ 查询错误:', error);
+      }
+      
+      btn.textContent = '🔍 查询最近交易';
+    }
+    
+    // 验证支付
+    async function verifyPayment() {
+      const amount = parseFloat(document.getElementById('amountInput').value);
+      const hours = parseInt(document.getElementById('timeInput').value) || 1;
+      const btn = document.getElementById('verifyBtn');
+      const result = document.getElementById('verifyResult');
+      
+      if (!amount || amount <= 0) {
+        result.innerHTML = '<div class="result error">❌ 请输入有效的金额</div>';
+        return;
+      }
+      
+      btn.innerHTML = '<span class="loading"></span> 验证中...';
+      
+      try {
+        const timeWindow = hours * 60 * 60 * 1000; // 转换为毫秒
+        const minTimestamp = Date.now() - timeWindow;
+        
+        const url = `${API_URL}/v1/accounts/${WALLET_ADDRESS}/transactions/trc20?limit=50&contract_address=${USDT_CONTRACT}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        console.log('🔍 验证参数:', { amount, hours, timeWindow, minTimestamp });
+        console.log('📦 交易数据:', data);
+        
+        if (!data.success || !data.data || data.data.length === 0) {
+          result.innerHTML = `<div class="result error">❌ 未找到任何交易\n\n搜索范围：最近 ${hours} 小时\n期望金额：${amount} USDT\n\n请确保：\n✓ 已完成转账\n✓ 交易已确认\n✓ 金额正确\n✓ 网络为 Nile Testnet</div>`;
+          btn.textContent = '🔍 验证支付';
+          return;
+        }
+        
+        // 过滤时间窗口内的交易
+        const recentTxs = data.data.filter(tx => tx.block_timestamp >= minTimestamp);
+        
+        console.log(`📋 时间窗口内的交易: ${recentTxs.length} 笔`);
+        
+        // 查找匹配金额的交易
+        const matchingTx = recentTxs.find(tx => {
+          const txAmount = tx.value / 1000000;
+          const isMatch = Math.abs(txAmount - amount) < 0.01;
+          console.log(`  交易 ${tx.transaction_id}: ${txAmount} USDT - ${isMatch ? '✅ 匹配' : '❌ 不匹配'}`);
+          return isMatch;
+        });
+        
+        if (matchingTx) {
+          const txAmount = matchingTx.value / 1000000;
+          const txDate = new Date(matchingTx.block_timestamp);
+          
+          result.innerHTML = `<div class="result success">✅ 验证成功！\n\n交易ID: ${matchingTx.transaction_id}\n金额: ${txAmount} USDT\n时间: ${txDate.toLocaleString('zh-CN')}\n发送方: ${matchingTx.from}\n\n🎉 会员可以激活了！</div>`;
+        } else {
+          const txList = recentTxs.map(tx => {
+            const txAmount = tx.value / 1000000;
+            return `  • ${txAmount} USDT (交易ID: ${tx.transaction_id.substring(0, 16)}...)`;
+          }).join('\n');
+          
+          result.innerHTML = `<div class="result error">❌ 未找到匹配的交易\n\n搜索范围：最近 ${hours} 小时\n期望金额：${amount} USDT\n找到交易：${recentTxs.length} 笔\n\n交易列表：\n${txList || '  无'}\n\n请检查：\n✓ 金额是否完全匹配\n✓ 是否在时间范围内</div>`;
+        }
+      } catch (error) {
+        result.innerHTML = `<div class="result error">❌ 验证失败\n\n错误: ${error.message}\n\n请检查控制台获取详细信息</div>`;
+        console.error('❌ 验证错误:', error);
+      }
+      
+      btn.textContent = '🔍 验证支付';
+    }
+    
+    // 复制文本
+    function copyText(text) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+        alert('✅ 已复制到剪贴板！\n\n' + text);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('✅ 已复制到剪贴板！\n\n' + text);
+      }
+    }
+    
+    // 页面加载时初始化
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>

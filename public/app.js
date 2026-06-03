@@ -890,7 +890,7 @@ async function verifyPaymentForUser(planId, amount, duration) {
 }
   
   // USDT TRC20 合约地址 (Nile 测试网)
-  const usdtContract = 'TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj'; // Nile测试网USDT合约
+  const usdtContract = 'TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf'; // Nile 测试网实际 USDT
   
   const messages = {
     zh: {

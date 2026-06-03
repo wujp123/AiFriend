@@ -733,7 +733,7 @@ window.payWithTRON = function(planId, usdtAmount, duration) {
   const network = 'Nile Testnet';
   
   // USDT TRC20 合约地址 (Nile 测试网)
-  const usdtContract = 'TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj';
+  const usdtContract = 'TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf'; // Nile 测试网实际 USDT
   
   const messages = {
     zh: {
