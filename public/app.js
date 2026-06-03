@@ -82,14 +82,55 @@ const elements = {
 
 // 初始化
 async function init() {
-  console.log('🚀 Initializing AiFriend...');
+  console.log('🚀 Initializing iFriendly AI...');
   
-  const user = tg.initDataUnsafe.user;
-  const userId = user?.id || 'demo_user';
+  // 获取 Telegram 用户信息
+  const telegramUser = tg.initDataUnsafe?.user;
+  let userId;
+  let userInfo = {};
+  
+  if (telegramUser) {
+    // 在 Telegram 环境中，使用 Telegram User ID
+    userId = telegramUser.id.toString();
+    userInfo = {
+      id: userId,
+      firstName: telegramUser.first_name || '',
+      lastName: telegramUser.last_name || '',
+      username: telegramUser.username || '',
+      languageCode: telegramUser.language_code || 'en',
+      isPremium: telegramUser.is_premium || false,
+      photoUrl: telegramUser.photo_url || ''
+    };
+    console.log('✅ Telegram User:', userInfo);
+  } else {
+    // 在浏览器测试环境中，生成唯一的匿名用户ID
+    userId = getOrCreateAnonymousUserId();
+    userInfo = {
+      id: userId,
+      firstName: 'Guest',
+      lastName: '',
+      username: 'guest_' + userId.substring(0, 8),
+      languageCode: navigator.language?.substring(0, 2) || 'en',
+      isPremium: false,
+      isAnonymous: true
+    };
+    console.log('👤 Anonymous User:', userInfo);
+  }
+  
+  // 显示用户信息（用于调试）
   console.log('User ID:', userId);
+  console.log('Platform:', telegramUser ? 'Telegram' : 'Web Browser');
   
+  // 获取或创建用户数据
   currentUser = storage.getUser(userId);
-  console.log('Current user:', currentUser);
+  
+  // 如果是新用户，保存用户信息
+  if (!currentUser.firstName) {
+    storage.updateUser(userId, userInfo);
+    currentUser = storage.getUser(userId);
+  }
+  
+  console.log('Current user data:', currentUser);
   
   // 智能语言检测（优先级：用户设置 > Telegram > IP > 浏览器）
   if (currentUser.language) {
@@ -98,18 +139,19 @@ async function init() {
   } else {
     // 使用智能语言检测
     try {
-      currentLang = await languageDetector.detect(user?.language_code, currentUser.language);
+      currentLang = await languageDetector.detect(userInfo.languageCode, currentUser.language);
       currentUser.language = currentLang;
       storage.updateUser(userId, currentUser);
       console.log(`Auto-detected language: ${currentLang}`);
     } catch (e) {
       console.error('Language detection failed:', e);
-      currentLang = 'en';
+      currentLang = userInfo.languageCode || 'en';
     }
   }
   
-  // 检查是否首次访问
-  const hasVisitedBefore = localStorage.getItem('hasVisited');
+  // 检查是否首次访问（针对当前用户）
+  const userVisitKey = `hasVisited_${userId}`;
+  const hasVisitedBefore = localStorage.getItem(userVisitKey);
   isFirstTimeUser = !hasVisitedBefore;
   console.log('Is first time user:', isFirstTimeUser);
   
@@ -120,7 +162,7 @@ async function init() {
   if (isFirstTimeUser) {
     // 首次访问 - 显示角色广场
     console.log('📱 Showing role square for first-time user');
-    localStorage.setItem('hasVisited', 'true');
+    localStorage.setItem(userVisitKey, 'true');
     showView('roleSquare');
   } else {
     // 老用户 - 检查是否有聊天历史
@@ -136,7 +178,30 @@ async function init() {
     }
   }
   
-  console.log('✅ AiFriend initialized successfully');
+  // 显示欢迎信息（仅 Telegram 环境）
+  if (telegramUser && isFirstTimeUser) {
+    const welcomeMsg = `👋 ${currentLang === 'zh' ? '欢迎' : 'Welcome'}, ${userInfo.firstName}!`;
+    console.log(welcomeMsg);
+  }
+  
+  console.log('✅ iFriendly AI initialized successfully');
+}
+
+// 获取或创建匿名用户ID（用于浏览器测试）
+function getOrCreateAnonymousUserId() {
+  const STORAGE_KEY = 'anonymous_user_id';
+  let anonymousId = localStorage.getItem(STORAGE_KEY);
+  
+  if (!anonymousId) {
+    // 生成唯一ID：时间戳 + 随机数
+    anonymousId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    localStorage.setItem(STORAGE_KEY, anonymousId);
+    console.log('🆕 Created new anonymous user ID:', anonymousId);
+  } else {
+    console.log('📌 Using existing anonymous user ID:', anonymousId);
+  }
+  
+  return anonymousId;
 }
 
 // 设置事件监听
@@ -236,6 +301,11 @@ function updateUI() {
   } else {
     document.body.setAttribute('dir', 'ltr');
     document.body.style.fontFamily = '';
+  }
+  
+  // 显示用户信息（如果有名字）
+  if (currentUser.firstName && !currentUser.isAnonymous) {
+    console.log(`👤 Logged in as: ${currentUser.firstName} (ID: ${currentUser.id})`);
   }
 }
 
