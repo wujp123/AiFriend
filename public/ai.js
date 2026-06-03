@@ -11,41 +11,47 @@ export class AIService {
   
   // 生成 AI 回复（可能包含图片）
   async generateResponse(userId, roleId, message, userLanguage = 'zh') {
-    console.log('🌍 AI Language:', userLanguage);
+    console.log('🌍 System Language:', userLanguage);
+    console.log('📝 User Message:', message);
     
     const role = getRole(roleId);
-    // 不使用历史记录，避免历史语言影响当前回复
-    // const history = storage.getConversationHistory(userId, roleId, 10);
     
-    // 语言映射和强制指令
+    // 检测用户消息的语言
+    const detectedLanguage = this.detectMessageLanguage(message);
+    console.log('🔍 Detected Message Language:', detectedLanguage);
+    
+    // 使用检测到的语言，而不是系统设置的语言
+    const responseLanguage = detectedLanguage;
+    
+    // 语言映射和指令
     const languageNames = {
-      'zh': '中文 (Chinese)',
+      'zh': '中文',
       'en': 'English',
-      'ja': '日本語 (Japanese)',
-      'ko': '한국어 (Korean)',
-      'ru': 'русский (Russian)',
-      'es': 'español (Spanish)',
-      'fr': 'français (French)',
-      'de': 'Deutsch (German)',
-      'pt': 'português (Portuguese)',
-      'ar': 'العربية (Arabic)'
+      'ja': '日本語',
+      'ko': '한국어',
+      'ru': 'русский',
+      'es': 'español',
+      'fr': 'français',
+      'de': 'Deutsch',
+      'pt': 'português',
+      'ar': 'العربية'
     };
     
     const languageInstructions = {
-      'zh': '你必须用中文回复所有消息。',
-      'en': 'You MUST respond in English ONLY. Do NOT use Chinese, Japanese, or any other language.',
-      'ja': 'すべてのメッセージに日本語のみで返信してください。',
-      'ko': '모든 메시지에 한국어로만 응답해야 합니다.',
-      'ru': 'Вы ДОЛЖНЫ отвечать только на русском языке.',
-      'es': 'Debes responder solo en español.',
-      'fr': 'Vous devez répondre uniquement en français.',
-      'de': 'Sie müssen nur auf Deutsch antworten.',
-      'pt': 'Você DEVE responder apenas em português.',
-      'ar': 'يجب أن ترد باللغة العربية فقط.'
+      'zh': '用中文回复',
+      'en': 'Respond in English',
+      'ja': '日本語で返信',
+      'ko': '한국어로 응답',
+      'ru': 'Ответить на русском',
+      'es': 'Responder en español',
+      'fr': 'Répondre en français',
+      'de': 'Auf Deutsch antworten',
+      'pt': 'Responder em português',
+      'ar': 'الرد بالعربية'
     };
     
-    const currentLanguage = languageNames[userLanguage] || languageNames['en'];
-    const languageInstruction = languageInstructions[userLanguage] || languageInstructions['en'];
+    const currentLanguage = languageNames[responseLanguage] || languageNames['en'];
+    const languageInstruction = languageInstructions[responseLanguage] || languageInstructions['en'];
     
     // 检查是否需要生成图片
     const shouldGenerateImage = imageService.shouldGenerateImage(message);
@@ -55,17 +61,12 @@ export class AIService {
       imageResult = await imageService.generateContextualSelfie(userId, roleId, message);
     }
     
-    // 构建系统提示 - 语言指令放在最顶部
-    const systemPrompt = `LANGUAGE INSTRUCTION: ${languageInstruction}
-Response Language: ${currentLanguage}
+    // 构建系统提示 - 强调用同语言回复
+    const systemPrompt = `Important: The user is speaking to you in ${currentLanguage}. You MUST respond in the SAME language (${currentLanguage}) that the user is using. Match the user's language exactly.
 
 ${role.systemPrompt}${imageResult?.success ? '\n\n当你发送自拍或照片时，要自然地描述你当时的样子、心情、环境等，让对话更生动。' : ''}`;
     
-    // 用户消息添加语言标记
-    const userMessage = `[Response in: ${currentLanguage}]\n${message}`;
-    
-    console.log('📝 System prompt:', systemPrompt);
-    console.log('📝 User message:', userMessage);
+    console.log('📝 Response Language:', currentLanguage);
     
     // 构建消息列表
     const messages = [
@@ -75,7 +76,7 @@ ${role.systemPrompt}${imageResult?.success ? '\n\n当你发送自拍或照片时
       },
       {
         role: 'user',
-        content: userMessage
+        content: message
       }
     ];
     
@@ -122,6 +123,67 @@ ${role.systemPrompt}${imageResult?.success ? '\n\n当你发送自拍或照片时
       console.error('AI API 错误:', error);
       throw error;
     }
+  }
+  
+  // 检测消息语言
+  detectMessageLanguage(message) {
+    // 中文检测（包括简繁体）
+    if (/[\u4e00-\u9fa5]/.test(message)) {
+      return 'zh';
+    }
+    
+    // 日文检测（平假名、片假名、日文汉字）
+    if (/[\u3040-\u309f\u30a0-\u30ff]/.test(message)) {
+      return 'ja';
+    }
+    
+    // 韩文检测
+    if (/[\uac00-\ud7af\u1100-\u11ff\u3130-\u318f]/.test(message)) {
+      return 'ko';
+    }
+    
+    // 阿拉伯文检测
+    if (/[\u0600-\u06ff\u0750-\u077f]/.test(message)) {
+      return 'ar';
+    }
+    
+    // 俄文（西里尔字母）
+    if (/[\u0400-\u04ff]/.test(message)) {
+      return 'ru';
+    }
+    
+    // 常见英语词汇模式检测
+    const commonEnglishWords = /\b(hello|hi|hey|good|morning|afternoon|evening|night|how|are|you|what|when|where|why|who|the|is|am|was|were|have|has|had|do|does|did|can|could|will|would|should|may|might|must)\b/i;
+    if (commonEnglishWords.test(message)) {
+      return 'en';
+    }
+    
+    // 西班牙语特征词
+    const commonSpanishWords = /\b(hola|buenos|días|noches|cómo|estás|qué|cuándo|dónde|por|para|con|el|la|los|las|soy|eres|está|están|tengo|tienes)\b/i;
+    if (commonSpanishWords.test(message)) {
+      return 'es';
+    }
+    
+    // 法语特征词
+    const commonFrenchWords = /\b(bonjour|salut|comment|allez|vous|êtes|suis|avez|avec|pour|dans|qui|que|quoi|où|quand|pourquoi)\b/i;
+    if (commonFrenchWords.test(message)) {
+      return 'fr';
+    }
+    
+    // 德语特征词
+    const commonGermanWords = /\b(hallo|guten|tag|morgen|abend|wie|geht|sind|haben|mit|für|der|die|das|ein|eine|was|wann|wo|warum|wer)\b/i;
+    if (commonGermanWords.test(message)) {
+      return 'de';
+    }
+    
+    // 葡萄牙语特征词
+    const commonPortugueseWords = /\b(olá|oi|bom|dia|noite|como|está|você|tem|para|com|que|quando|onde|por|quê|quem)\b/i;
+    if (commonPortugueseWords.test(message)) {
+      return 'pt';
+    }
+    
+    // 默认返回英语
+    return 'en';
   }
 }
 
