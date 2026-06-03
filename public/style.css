@@ -118,6 +118,36 @@ main {
   overflow: hidden;
 }
 
+.chat-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 15px;
+  background: var(--tg-theme-bg-color, white);
+  border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.clear-chat-btn {
+  background: none;
+  border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+  border-radius: 8px;
+  font-size: 1.2em;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: var(--tg-theme-hint-color, #999);
+}
+
+.clear-chat-btn:hover {
+  background: rgba(255, 68, 68, 0.1);
+  border-color: #ff4444;
+  color: #ff4444;
+}
+
+.clear-chat-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
 .chat-container {
   flex: 1;
   display: flex;

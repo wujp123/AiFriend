@@ -50,6 +50,7 @@ const elements = {
   
   // Main view
   mainView: document.getElementById('mainView'),
+  clearChatBtn: document.getElementById('clearChatBtn'),
   chatMessages: document.getElementById('chatMessages'),
   messageInput: document.getElementById('messageInput'),
   sendButton: document.getElementById('sendButton'),
@@ -147,6 +148,9 @@ function setupEventListeners() {
   
   // 新对话按钮
   elements.newChatBtn.addEventListener('click', () => showView('roleSquare'));
+  
+  // 清除当前聊天按钮
+  elements.clearChatBtn.addEventListener('click', clearCurrentChat);
   
   // 发送消息
   elements.sendButton.addEventListener('click', sendMessage);
@@ -512,6 +516,34 @@ function clearHistory() {
         elements.chatMessages.innerHTML = '';
         addWelcomeMessage();
         tg.showAlert(clearedMessage);
+      }
+    });
+  } catch (e) {
+    // Fallback for non-Telegram environment
+    if (confirm(confirmMessage)) {
+      storage.clearConversation(currentUser.id, currentUser.currentRole);
+      elements.chatMessages.innerHTML = '';
+      addWelcomeMessage();
+      alert(clearedMessage);
+    }
+  }
+}
+
+// 清除当前聊天（从聊天界面）
+function clearCurrentChat() {
+  const role = getRole(currentUser.currentRole);
+  const roleName = t(`roles.${currentUser.currentRole}.name`, currentLang);
+  const confirmMessage = `${t('clearConfirm', currentLang)}\n\n${role.emoji} ${roleName}`;
+  const clearedMessage = t('cleared', currentLang);
+  
+  try {
+    tg.showConfirm(confirmMessage, (confirmed) => {
+      if (confirmed) {
+        storage.clearConversation(currentUser.id, currentUser.currentRole);
+        elements.chatMessages.innerHTML = '';
+        addWelcomeMessage();
+        tg.showAlert(clearedMessage);
+        tg.HapticFeedback.notificationOccurred('success');
       }
     });
   } catch (e) {
