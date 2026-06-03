@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Meta Tags -->
+  <title>FAQ - iFriendly AI | Frequently Asked Questions</title>
+  <meta name="description" content="Find answers to common questions about iFriendly AI chatbot on Telegram. Learn about features, pricing, payments, privacy, and more.">
+  <meta name="keywords" content="AI chatbot FAQ, Telegram bot questions, AI assistant help, chatbot support, USDT payment help, AI companion questions">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="iFriendly AI FAQ - Your Questions Answered">
+  <meta property="og:description" content="Everything you need to know about using iFriendly AI on Telegram">
+  <meta property="og:url" content="https://wujp123.github.io/AiFriend/faq.html">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary: #667eea;
+      --secondary: #764ba2;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #ffffff;
+      --bg-light: #f7fafc;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      line-height: 1.8;
+      color: var(--text);
+      background: var(--bg-light);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    
+    .nav {
+      background: white;
+      padding: 15px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .nav a {
+      color: var(--text);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      transition: all 0.3s;
+    }
+    
+    .nav a:hover {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    
+    .category {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .category-title {
+      color: var(--primary);
+      font-size: 28px;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid var(--bg-light);
+    }
+    
+    .faq-item {
+      margin-bottom: 25px;
+    }
+    
+    .question {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 10px;
+      cursor: pointer;
+      padding: 15px;
+      background: var(--bg-light);
+      border-radius: 10px;
+      transition: all 0.3s;
+    }
+    
+    .question:hover {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+    }
+    
+    .question::before {
+      content: 'Q: ';
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .question:hover::before {
+      color: white;
+    }
+    
+    .answer {
+      color: var(--text);
+      padding: 15px 20px;
+      line-height: 1.8;
+    }
+    
+    .answer::before {
+      content: 'A: ';
+      font-weight: bold;
+      color: var(--secondary);
+    }
+    
+    .answer ul {
+      margin: 15px 0 15px 40px;
+    }
+    
+    .answer li {
+      margin-bottom: 8px;
+    }
+    
+    .highlight-box {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 15px;
+      margin: 30px 0;
+      text-align: center;
+    }
+    
+    .highlight-box h3 {
+      margin-bottom: 15px;
+      font-size: 24px;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 12px 30px;
+      background: white;
+      color: var(--primary);
+      text-decoration: none;
+      border-radius: 25px;
+      font-weight: 600;
+      transition: all 0.3s;
+      margin-top: 15px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    
+    .search-box {
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    
+    .search-box input {
+      width: 100%;
+      max-width: 600px;
+      padding: 15px 25px;
+      font-size: 16px;
+      border: 2px solid var(--primary);
+      border-radius: 50px;
+      outline: none;
+    }
+    
+    .footer {
+      background: #2d3748;
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+      margin-top: 60px;
+    }
+    
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 32px;
+      }
+      
+      .category {
+        padding: 25px;
+      }
+      
+      .question {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>❓ Frequently Asked Questions</h1>
+    <p>Everything you need to know about iFriendly AI</p>
+  </div>
+  
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="landing.html">🏠 Home</a>
+      <a href="blog.html">📝 Blog</a>
+      <a href="faq.html">❓ FAQ</a>
+      <a href="https://t.me/iFriendly_Ai_Bot/ifriendly_app" target="_blank">🚀 Launch App</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="search-box">
+      <input type="text" placeholder="🔍 Search for questions..." id="searchInput">
+    </div>
+
+    <!-- Getting Started -->
+    <div class="category">
+      <h2 class="category-title">🚀 Getting Started</h2>
+      
+      <div class="faq-item">
+        <div class="question">What is iFriendly AI?</div>
+        <div class="answer">
+          iFriendly AI is an advanced AI chatbot platform built on Telegram. It features 11+ unique AI characters with different personalities, multilingual support for 10+ languages, and AI image generation capabilities. Think of it as having multiple AI companions available 24/7 right in your Telegram app.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">How do I start using iFriendly AI?</div>
+        <div class="answer">
+          It's super easy! Just open the Telegram Mini App at <a href="https://t.me/iFriendly_Ai_Bot/ifriendly_app" target="_blank">t.me/iFriendly_Ai_Bot/ifriendly_app</a> or message <a href="https://t.me/iFriendly_Ai_Bot" target="_blank">@iFriendly_Ai_Bot</a> on Telegram. Your account is automatically created using your Telegram profile. No signup forms, no email verification - just start chatting!
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Is iFriendly AI free?</div>
+        <div class="answer">
+          Yes and no. We offer a free tier with limited messages so you can try the platform. For unlimited access to all features, characters, and image generation, you'll need a premium subscription starting at just $2 USDT per week.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Do I need to install anything?</div>
+        <div class="answer">
+          Nope! iFriendly AI runs entirely within Telegram as a Mini App. If you have Telegram installed, you're all set. No separate apps, no downloads, no extra space needed on your device.
+        </div>
+      </div>
+    </div>
+
+    <!-- Characters & Features -->
+    <div class="category">
+      <h2 class="category-title">🎭 Characters & Features</h2>
+      
+      <div class="faq-item">
+        <div class="question">What AI characters are available?</div>
+        <div class="answer">
+          We have 11+ unique AI characters:
+          <ul>
+            <li>💕 Girlfriend - Romantic and caring companion</li>
+            <li>👧 Sister - Friendly and supportive</li>
+            <li>👩‍🏫 Teacher - Educational and patient</li>
+            <li>👨‍⚕️ Psychologist - Empathetic mental health support</li>
+            <li>💼 Career Coach - Professional development expert</li>
+            <li>🎮 Gaming Buddy - For gaming discussions</li>
+            <li>📚 Study Partner - Academic help and motivation</li>
+            <li>🎨 Creative Muse - Inspiration and creativity</li>
+            <li>🍳 Chef - Cooking tips and recipes</li>
+            <li>💪 Fitness Trainer - Health and workout guidance</li>
+            <li>✈️ Travel Guide - Travel advice and planning</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Can I switch between characters?</div>
+        <div class="answer">
+          Absolutely! Premium members can switch between all characters anytime. Each character maintains separate conversation history, so you can have different ongoing conversations with different personalities.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">How does AI image generation work?</div>
+        <div class="answer">
+          Simply describe what you want to see in text, and our AI will generate a unique image for you. For example, "a sunset over mountains" or "cyberpunk city at night." The more detailed your description, the better the result. Premium members get unlimited image generation!
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">What languages are supported?</div>
+        <div class="answer">
+          iFriendly AI supports 10+ languages including English, Chinese (Simplified & Traditional), Japanese, Spanish, French, German, Korean, Russian, Portuguese, and Italian. The AI automatically detects your language and responds accordingly. You can even practice language learning by chatting in different languages!
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Are my conversations saved?</div>
+        <div class="answer">
+          Yes! Your chat history is automatically saved and you can access it anytime. This helps the AI provide more context-aware and personalized responses. Premium members have unlimited chat history storage, while free users have limited history retention.
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing & Payments -->
+    <div class="category">
+      <h2 class="category-title">💰 Pricing & Payments</h2>
+      
+      <div class="faq-item">
+        <div class="question">How much does premium cost?</div>
+        <div class="answer">
+          We offer flexible pricing:
+          <ul>
+            <li>Weekly: $2 USDT (perfect for testing)</li>
+            <li>Monthly: $5 USDT (most popular)</li>
+            <li>Quarterly: $13 USDT (save 13%)</li>
+            <li>Yearly: $40 USDT (save 33% + exclusive features)</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Why do you only accept USDT cryptocurrency?</div>
+        <div class="answer">
+          We use USDT (TRC20) for several reasons:
+          <ul>
+            <li>⚡ Lightning-fast transactions (seconds, not days)</li>
+            <li>💸 Very low fees (usually under $1)</li>
+            <li>🌍 Available worldwide - no geographic restrictions</li>
+            <li>🔒 More private - no credit card data needed</li>
+            <li>💵 Stable value - USDT is pegged 1:1 to USD</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">How do I buy USDT if I don't have any?</div>
+        <div class="answer">
+          You can buy USDT from popular cryptocurrency exchanges like:
+          <ul>
+            <li>Binance (global, most popular)</li>
+            <li>Coinbase (USA, beginner-friendly)</li>
+            <li>OKX (great for Asia)</li>
+            <li>Kraken (Europe, trusted)</li>
+            <li>Your local crypto exchange</li>
+          </ul>
+          Most exchanges accept credit cards, bank transfers, or other payment methods. After buying, make sure to withdraw to a TRON (TRC20) wallet!
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">How do I pay for premium?</div>
+        <div class="answer">
+          Easy process:
+          <ol>
+            <li>Choose your subscription plan in the app</li>
+            <li>Copy our USDT (TRC20) wallet address</li>
+            <li>Send the exact amount from your crypto wallet</li>
+            <li>Wait 10-30 seconds for blockchain confirmation</li>
+            <li>Your premium activates automatically!</li>
+          </ol>
+          <strong>Important:</strong> Always use TRON (TRC20) network! Other networks (ERC20, BEP20) won't work.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">What if I send the wrong amount?</div>
+        <div class="answer">
+          If you send too much, the extra will be credited to your account for future renewals. If you send too little, contact our support through the Telegram bot with your transaction ID and we'll help resolve it.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Can I get a refund?</div>
+        <div class="answer">
+          Due to the nature of cryptocurrency transactions (they're irreversible), we handle refunds on a case-by-case basis. If you have a legitimate issue, contact our support team through the bot with details. We're reasonable and want happy users!
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Does premium auto-renew?</div>
+        <div class="answer">
+          No! Premium subscriptions do NOT auto-renew. Crypto payments are one-time transactions, so you have full control. You'll receive a reminder when your subscription is about to expire, and you can choose to renew manually.
+        </div>
+      </div>
+    </div>
+
+    <!-- Privacy & Security -->
+    <div class="category">
+      <h2 class="category-title">🔒 Privacy & Security</h2>
+      
+      <div class="faq-item">
+        <div class="question">Is my data private and secure?</div>
+        <div class="answer">
+          Yes! We take privacy seriously:
+          <ul>
+            <li>Your conversations are stored locally and encrypted</li>
+            <li>We don't sell or share your data with third parties</li>
+            <li>No tracking, no ads, no data mining</li>
+            <li>Your payment info (crypto addresses) is never stored</li>
+            <li>We only use your Telegram user ID for identification</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Can other people see my conversations?</div>
+        <div class="answer">
+          No! Your conversations are completely private. Only you can access your chat history. We don't have admins reading your messages or monitoring your activity. Your chats are between you and the AI only.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">What data do you collect?</div>
+        <div class="answer">
+          We only collect essential data:
+          <ul>
+            <li>Your Telegram user ID (for account identification)</li>
+            <li>Your conversation history (stored locally for context)</li>
+            <li>Payment transaction IDs (to verify premium status)</li>
+            <li>Basic usage statistics (completely anonymized)</li>
+          </ul>
+          We don't collect personal information, browsing habits, or anything beyond what's necessary for the service to work.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Can I delete my data?</div>
+        <div class="answer">
+          Yes! You can clear your chat history anytime from the settings menu. If you want to completely delete your account and all associated data, message our support through the Telegram bot and we'll process it within 24 hours.
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical Support -->
+    <div class="category">
+      <h2 class="category-title">🛠️ Technical Support</h2>
+      
+      <div class="faq-item">
+        <div class="question">The app won't load. What should I do?</div>
+        <div class="answer">
+          Try these steps:
+          <ol>
+            <li>Check your internet connection</li>
+            <li>Close and reopen Telegram</li>
+            <li>Clear Telegram cache (Settings → Data and Storage → Clear Cache)</li>
+            <li>Update Telegram to the latest version</li>
+            <li>Try accessing from a different device</li>
+          </ol>
+          If the problem persists, contact support with details about your device and Telegram version.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">The AI is giving weird responses. Why?</div>
+        <div class="answer">
+          This can happen for a few reasons:
+          <ul>
+            <li>Your question might be unclear - try rephrasing</li>
+            <li>The AI might lack context - provide more background information</li>
+            <li>The character might not be suitable for your query - try a different character</li>
+            <li>There might be a temporary API issue - wait a minute and retry</li>
+          </ul>
+          Remember, AI works best with clear, specific questions and adequate context.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">My premium payment isn't showing up. Help!</div>
+        <div class="answer">
+          Don't worry! Follow these steps:
+          <ol>
+            <li>Wait 1-2 minutes for blockchain confirmation</li>
+            <li>Check that you used TRON (TRC20) network</li>
+            <li>Verify you sent to the correct address</li>
+            <li>Restart the app to refresh your premium status</li>
+            <li>Contact support with your transaction ID if still not working</li>
+          </ol>
+          99% of payment issues resolve within 5 minutes.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">How do I report a bug or suggest a feature?</div>
+        <div class="answer">
+          We love feedback! Message <a href="https://t.me/iFriendly_Ai_Bot" target="_blank">@iFriendly_Ai_Bot</a> on Telegram with details about the bug or your feature suggestion. We read every message and regularly implement user suggestions. Your input helps make iFriendly AI better for everyone!
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Can I use iFriendly AI on multiple devices?</div>
+        <div class="answer">
+          Yes! Your iFriendly AI account is linked to your Telegram account, so you can access it from any device where you're logged into Telegram - phone, tablet, desktop, or web. Your chat history and premium status sync automatically.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Is there an API or developer access?</div>
+        <div class="answer">
+          Currently, iFriendly AI is designed for end-users through the Telegram interface. We don't offer public API access at this time. However, if you're interested in partnership or integration opportunities, contact us through the bot to discuss possibilities.
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Usage -->
+    <div class="category">
+      <h2 class="category-title">🎓 Advanced Usage</h2>
+      
+      <div class="faq-item">
+        <div class="question">How can I get better responses from the AI?</div>
+        <div class="answer">
+          Pro tips for optimal AI conversations:
+          <ul>
+            <li><strong>Be specific:</strong> Instead of "help me," try "help me write a professional email to my boss about vacation time"</li>
+            <li><strong>Provide context:</strong> Share relevant background information</li>
+            <li><strong>Ask follow-ups:</strong> Build on previous responses for deeper conversations</li>
+            <li><strong>Choose the right character:</strong> Use Teacher for learning, Psychologist for emotional topics, etc.</li>
+            <li><strong>Use proper grammar:</strong> Helps the AI understand your intent better</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Can I use iFriendly AI for work or business?</div>
+        <div class="answer">
+          Absolutely! Many users leverage iFriendly AI for professional tasks:
+          <ul>
+            <li>Brainstorming ideas with Creative Muse</li>
+            <li>Getting career advice from Career Coach</li>
+            <li>Learning new skills with Teacher</li>
+            <li>Drafting emails and documents</li>
+            <li>Quick research and fact-checking</li>
+          </ul>
+          Premium members have unlimited access perfect for heavy professional use.
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">What are the best prompts for AI image generation?</div>
+        <div class="answer">
+          Great image prompts include:
+          <ul>
+            <li><strong>Subject:</strong> What do you want to see?</li>
+            <li><strong>Style:</strong> Photorealistic, anime, oil painting, digital art, etc.</li>
+            <li><strong>Details:</strong> Colors, lighting, mood, composition</li>
+            <li><strong>Quality modifiers:</strong> "highly detailed," "4k," "professional"</li>
+          </ul>
+          Example: "A cozy coffee shop in Tokyo, raining outside, warm lighting, anime style, highly detailed" produces much better results than just "coffee shop."
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="question">Can the AI remember information across different characters?</div>
+        <div class="answer">
+          No, each AI character maintains separate conversation memory. This is by design - it allows you to have distinct relationships with different characters. For example, you might discuss work with Career Coach and personal matters with Sister, and they won't cross-reference those conversations.
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <h3>Still Have Questions?</h3>
+      <p style="font-size: 18px;">Our support team is here to help 24/7</p>
+      <a href="https://t.me/iFriendly_Ai_Bot" class="btn" target="_blank">💬 Contact Support</a>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2024 iFriendly AI. Powered by DeepSeek AI.</p>
+    <p style="margin-top: 10px; opacity: 0.7;">
+      <a href="landing.html" style="color: white; margin: 0 10px;">Home</a>
+      <a href="blog.html" style="color: white; margin: 0 10px;">Blog</a>
+      <a href="https://t.me/iFriendly_Ai_Bot" style="color: white; margin: 0 10px;" target="_blank">Telegram</a>
+    </p>
+  </footer>
+
+  <!-- Simple search functionality -->
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const categories = document.querySelectorAll('.category');
+    
+    searchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      
+      categories.forEach(category => {
+        const faqItems = category.querySelectorAll('.faq-item');
+        let hasVisibleItem = false;
+        
+        faqItems.forEach(item => {
+          const question = item.querySelector('.question').textContent.toLowerCase();
+          const answer = item.querySelector('.answer').textContent.toLowerCase();
+          
+          if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+            item.style.display = 'block';
+            hasVisibleItem = true;
+          } else {
+            item.style.display = searchTerm ? 'none' : 'block';
+          }
+        });
+        
+        category.style.display = (hasVisibleItem || !searchTerm) ? 'block' : 'none';
+      });
+    });
+  </script>
+
+  <!-- Schema.org FAQPage structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [{
+      "@type": "Question",
+      "name": "What is iFriendly AI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "iFriendly AI is an advanced AI chatbot platform built on Telegram featuring 11+ unique AI characters with different personalities, multilingual support for 10+ languages, and AI image generation capabilities."
+      }
+    },{
+      "@type": "Question",
+      "name": "How much does premium cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We offer flexible pricing: Weekly $2 USDT, Monthly $5 USDT, Quarterly $13 USDT (save 13%), and Yearly $40 USDT (save 33%)."
+      }
+    },{
+      "@type": "Question",
+      "name": "Is my data private and secure?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes! Your conversations are stored locally and encrypted. We don't sell or share your data with third parties, no tracking, no ads, no data mining."
+      }
+    }]
+  }
+  </script>
+</body>
+</html>
