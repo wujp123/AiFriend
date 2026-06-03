@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AiFriend</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header id="header">
+      <div class="header-left">
+        <button id="roleBtn" class="icon-btn">
+          <span id="currentRoleEmoji">👩‍💼</span>
+        </button>
+        <div class="header-info">
+          <h1 id="appTitle">AiFriend</h1>
+          <p id="roleStatus" class="role-status"></p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="quotaBtn" class="quota-btn">
+          <span id="quotaText">50</span>
+        </button>
+        <button id="settingsBtn" class="icon-btn">⚙️</button>
+      </div>
+    </header>
+
+    <main id="mainView">
+      <div class="chat-container">
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="chat-input-container">
+          <input type="text" id="messageInput" class="chat-input" placeholder="Type..." autocomplete="off">
+          <button id="sendButton" class="send-button"><span>📤</span></button>
+        </div>
+      </div>
+    </main>
+
+    <div id="roleSquareView" class="view hidden">
+      <div class="view-header">
+        <button id="backFromRoles" class="back-btn">← Back</button>
+        <h2 id="roleSquareTitle">Roles</h2>
+      </div>
+      <div class="role-square-content">
+        <div id="roleCategories"></div>
+      </div>
+    </div>
+
+    <div id="membershipView" class="view hidden">
+      <div class="view-header">
+        <button id="backFromMembership" class="back-btn">← Back</button>
+        <h2 id="membershipTitle">Membership</h2>
+      </div>
+      <div class="membership-content">
+        <div class="membership-status">
+          <h3 id="membershipStatusTitle">Status</h3>
+          <div id="membershipStatusContent"></div>
+        </div>
+        <div class="membership-plans" id="membershipPlans"></div>
+      </div>
+    </div>
+
+    <div id="settingsView" class="view hidden">
+      <div class="view-header">
+        <button id="backFromSettings" class="back-btn">← Back</button>
+        <h2 id="settingsTitle">Settings</h2>
+      </div>
+      <div class="settings-content">
+        <div class="setting-group">
+          <h3 id="languageTitle">Language</h3>
+          <select id="languageSelect" class="setting-select">
+            <option value="zh">简体中文</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <h3>API Key</h3>
+          <input type="password" id="apiKeyInput" class="setting-input" placeholder="Your API Key (optional)">
+          <p class="setting-hint">Enter your own API Key for better experience</p>
+        </div>
+        <div class="setting-group">
+          <button id="clearHistoryBtn" class="danger-btn">Clear History</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

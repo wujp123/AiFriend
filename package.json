@@ -1,0 +1,21 @@
+{
+  "name": "aifriend",
+  "version": "1.0.0",
+  "description": "AiFriend - Telegram Web App AI 智能助手（纯前端）",
+  "main": "bot.js",
+  "type": "module",
+  "scripts": {
+    "test-bot": "node bot.js",
+    "serve": "npx http-server public -p 3000 -c-1",
+    "dev": "npx http-server public -p 3000 -c-1 -o"
+  },
+  "keywords": ["ai", "telegram", "chatbot", "webapp", "assistant", "static"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.67.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
