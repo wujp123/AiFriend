@@ -1209,7 +1209,7 @@ function tryOpenApp(url, timeout = 1000) {
 }
 
 // 激活会员
-function activatePremium(days) {
+async function activatePremium(days) {
   // 使用 storage 的 setPremium 方法设置会员状态
   storage.setPremium(currentUser.id, days);
   

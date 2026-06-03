@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache">
+  <title>重置账号</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+    p {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    .warning {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      color: #856404;
+      font-weight: 600;
+    }
+    button {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #dc2626;
+      transform: scale(1.05);
+    }
+    .info {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f0f0f0;
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 重置账号</h1>
+    
+    <p>
+      此工具将清除当前浏览器的所有数据，
+      让你作为新用户重新注册。
+    </p>
+    
+    <div class="warning">
+      ⚠️ 警告<br>
+      这将清除：<br>
+      • 用户信息<br>
+      • 对话记录<br>
+      • 会员状态
+    </div>
+    
+    <button onclick="resetAccount()">
+      清除数据并重置
+    </button>
+    
+    <div class="info" id="info">
+      等待操作...
+    </div>
+  </div>
+
+  <script>
+    function updateInfo(text) {
+      document.getElementById('info').textContent = text;
+    }
+    
+    function resetAccount() {
+      if (!confirm('确定要清除所有数据吗？\n\n这个操作不可撤销！')) {
+        return;
+      }
+      
+      updateInfo('正在清除 localStorage...');
+      
+      setTimeout(() => {
+        try {
+          // 显示清除前的数据
+          const keys = Object.keys(localStorage);
+          updateInfo(`找到 ${keys.length} 个数据项，正在清除...`);
+          
+          setTimeout(() => {
+            // 清除
+            localStorage.clear();
+            updateInfo('✅ 数据已清除！\n\n2秒后跳转到主应用...');
+            
+            setTimeout(() => {
+              window.location.href = './index.html';
+            }, 2000);
+          }, 1000);
+        } catch (e) {
+          updateInfo('❌ 错误: ' + e.message);
+        }
+      }, 500);
+    }
+    
+    // 页面加载时显示当前数据
+    window.onload = function() {
+      const keys = Object.keys(localStorage);
+      const size = JSON.stringify(localStorage).length;
+      updateInfo(`当前数据:\n• ${keys.length} 个项目\n• 约 ${(size/1024).toFixed(2)} KB`);
+    };
+  </script>
+</body>
+</html>
