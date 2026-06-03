@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iFriendly AI - 管理后台</title>
+  <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+  <div class="admin-container">
+    <!-- 登录界面 -->
+    <div id="loginView" class="view">
+      <div class="login-card">
+        <h1>🔐 管理员登录</h1>
+        <p class="subtitle">Admin Access Only</p>
+        <div class="login-form">
+          <input type="password" id="adminPassword" placeholder="请输入管理员密码" />
+          <button id="loginBtn" class="primary-btn">登录</button>
+          <p id="loginError" class="error-msg"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 管理后台主界面 -->
+    <div id="adminView" class="view hidden">
+      <header class="admin-header">
+        <h1>📊 iFriendly AI 管理后台</h1>
+        <div class="header-actions">
+          <button id="refreshBtn" class="icon-btn">🔄</button>
+          <button id="logoutBtn" class="icon-btn">🚪</button>
+        </div>
+      </header>
+
+      <!-- 导航标签 -->
+      <nav class="admin-nav">
+        <button class="nav-tab active" data-tab="dashboard">📊 概览</button>
+        <button class="nav-tab" data-tab="payments">💰 收款记录</button>
+        <button class="nav-tab" data-tab="leaderboard">🏆 充值榜</button>
+        <button class="nav-tab" data-tab="users">👥 用户管理</button>
+      </nav>
+
+      <!-- 概览页 -->
+      <div id="dashboardTab" class="tab-content active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+              <div class="stat-value" id="totalUsers">0</div>
+              <div class="stat-label">总用户数</div>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">💎</div>
+            <div class="stat-info">
+              <div class="stat-value" id="premiumUsers">0</div>
+              <div class="stat-label">会员用户</div>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-info">
+              <div class="stat-value" id="totalRevenue">$0</div>
+              <div class="stat-label">总收入</div>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-info">
+              <div class="stat-value" id="todayRevenue">$0</div>
+              <div class="stat-label">今日收入</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <h3>📊 近7天数据</h3>
+          <div id="chartArea" class="chart-placeholder">
+            <canvas id="revenueChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 收款记录页 -->
+      <div id="paymentsTab" class="tab-content">
+        <div class="tab-header">
+          <h2>💰 收款记录</h2>
+          <div class="tab-actions">
+            <button id="addPaymentBtn" class="primary-btn">➕ 手动添加</button>
+            <button id="exportPaymentsBtn" class="secondary-btn">📥 导出CSV</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <select id="paymentStatusFilter">
+            <option value="all">全部状态</option>
+            <option value="pending">待确认</option>
+            <option value="completed">已完成</option>
+            <option value="failed">已失败</option>
+          </select>
+          <input type="date" id="paymentDateFilter" />
+          <input type="text" id="paymentSearchInput" placeholder="搜索用户ID或交易ID" />
+        </div>
+
+        <div class="table-container">
+          <table id="paymentsTable" class="data-table">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>用户ID</th>
+                <th>用户名</th>
+                <th>套餐</th>
+                <th>金额</th>
+                <th>交易ID</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTableBody">
+              <!-- 动态填充 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 充值排行榜页 -->
+      <div id="leaderboardTab" class="tab-content">
+        <div class="tab-header">
+          <h2>🏆 充值排行榜</h2>
+          <div class="tab-actions">
+            <select id="leaderboardPeriod">
+              <option value="all">总榜</option>
+              <option value="month">本月</option>
+              <option value="week">本周</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="leaderboard-container">
+          <div class="leaderboard-list" id="leaderboardList">
+            <!-- 动态填充 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 用户管理页 -->
+      <div id="usersTab" class="tab-content">
+        <div class="tab-header">
+          <h2>👥 用户管理</h2>
+          <div class="tab-actions">
+            <button id="exportUsersBtn" class="secondary-btn">📥 导出用户</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <select id="userTypeFilter">
+            <option value="all">全部用户</option>
+            <option value="premium">会员</option>
+            <option value="free">免费</option>
+          </select>
+          <input type="text" id="userSearchInput" placeholder="搜索用户ID或用户名" />
+        </div>
+
+        <div class="table-container">
+          <table id="usersTable" class="data-table">
+            <thead>
+              <tr>
+                <th>用户ID</th>
+                <th>用户名</th>
+                <th>状态</th>
+                <th>注册时间</th>
+                <th>累计充值</th>
+                <th>会员到期</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <!-- 动态填充 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 手动添加收款记录弹窗 -->
+    <div id="addPaymentModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>➕ 添加收款记录</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>用户ID</label>
+            <input type="text" id="newPaymentUserId" placeholder="输入用户ID" />
+          </div>
+          <div class="form-group">
+            <label>套餐</label>
+            <select id="newPaymentPlan">
+              <option value="weekly">周会员 - $2</option>
+              <option value="monthly">月会员 - $5</option>
+              <option value="quarterly">季度会员 - $13</option>
+              <option value="yearly">年会员 - $40</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>交易ID（可选）</label>
+            <input type="text" id="newPaymentTxId" placeholder="TRON交易哈希" />
+          </div>
+          <div class="form-group">
+            <label>备注</label>
+            <textarea id="newPaymentNote" placeholder="添加备注信息"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="cancelPaymentBtn" class="secondary-btn">取消</button>
+          <button id="confirmPaymentBtn" class="primary-btn">确认添加</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

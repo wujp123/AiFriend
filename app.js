@@ -721,18 +721,21 @@ window.payWithTON = function(planId, tonAmount, duration) {
   }
 };
 
-// TRON (USDT-TRC20) 支付
+// TRON (USDT-TRC20) 支付 - Nile 测试网络
 window.payWithTRON = function(planId, usdtAmount, duration) {
   console.log(`🔺 Initiating TRON payment: ${planId}, ${usdtAmount} USDT, ${duration} days`);
   
+  // Nile 测试网络钱包地址
   const tronAddress = 'TZ2Q6fXRP44bu28R4WTdMB3Tzf7TXfGR6m';
+  const network = 'Nile Testnet';
   
   const messages = {
     zh: {
-      title: 'TRON 支付 (USDT-TRC20)',
-      desc: `请向以下地址转账 ${usdtAmount} USDT (TRC20网络)`,
+      title: `TRON 支付 (${network})`,
+      desc: `【测试网络】请向以下地址转账 ${usdtAmount} USDT`,
       address: '地址',
       amount: '金额',
+      network: '网络',
       copy: '复制地址',
       done: '已完成支付',
       cancel: '取消',
@@ -742,10 +745,11 @@ window.payWithTRON = function(planId, usdtAmount, duration) {
       noteText: `AiFriend_${planId}_${currentUser.id}`
     },
     en: {
-      title: 'TRON Payment (USDT-TRC20)',
-      desc: `Please transfer ${usdtAmount} USDT (TRC20 network) to the address below`,
+      title: `TRON Payment (${network})`,
+      desc: `【Testnet】Please transfer ${usdtAmount} USDT to the address below`,
       address: 'Address',
       amount: 'Amount',
+      network: 'Network',
       copy: 'Copy Address',
       done: 'Payment Completed',
       cancel: 'Cancel',
@@ -761,7 +765,7 @@ window.payWithTRON = function(planId, usdtAmount, duration) {
   try {
     tg.showPopup({
       title: msg.title,
-      message: `${msg.desc}\n\n${msg.address}:\n${tronAddress}\n\n${msg.amount}: ${usdtAmount} USDT (TRC20)\n\n${msg.note}: ${msg.noteText}`,
+      message: `${msg.desc}\n\n${msg.network}: ${network}\n\n${msg.address}:\n${tronAddress}\n\n${msg.amount}: ${usdtAmount} USDT (TRC20)\n\n${msg.note}: ${msg.noteText}`,
       buttons: [
         { id: 'copy', type: 'default', text: msg.copy },
         { id: 'done', type: 'default', text: msg.done },
